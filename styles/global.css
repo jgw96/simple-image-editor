@@ -4,7 +4,8 @@
   Check here https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties for more info on using CSS variables.
 */
 :root {
-  --app-color-primary: #686bd2;
+  --app-color-primary: #262626;
+  --app-color-secondary: #215bd8;
   --font-family: sans-serif;
 }
 

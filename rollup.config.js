@@ -4,6 +4,7 @@ import { generateSW } from 'rollup-plugin-workbox';
 import html from '@open-wc/rollup-plugin-html';
 import strip from '@rollup/plugin-strip';
 import copy from 'rollup-plugin-copy';
+import wasm from '@rollup/plugin-wasm';
 
 export default {
   input: 'index.html',
@@ -13,11 +14,9 @@ export default {
   },
   plugins: [
     resolve(),
+    wasm(),
     html(),
     terser(),
-    strip({
-      functions: ['console.log']
-    }),
     copy({
       targets: [
         { src: 'assets/**/*', dest: 'dist/assets/' },
