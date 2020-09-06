@@ -322,6 +322,35 @@ export class AppHome extends LitElement {
     }
   }
 
+  saturate() {
+// https://github.com/klouskingsley/imagedata-filters/blob/master/src/filters/saturate.js
+    const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
+
+    const amount = 2;
+
+    if (data) {
+      const d = data.data;
+    for (let i = 0; i < d.length; i += 4) {
+      let r = (.213 + .787 * amount) * d[i]
+          + (.715 - .715 * amount) * d[i + 1]
+          + (.072 - .072 * amount) * d[i + 2];
+      let g = (.213 - .213 * amount) * d[i]
+          + (.715 + .285 * amount) * d[i + 1]
+          + (.072 - .072 * amount) * d[i + 2];
+      let b = (.213 - .213 * amount) * d[i];
+          + (.715 - .715 * amount) * d[i + 1]
+          + (.072 + .928 * amount) * d[i + 2];
+      
+      d[i] = r;
+      d[i + 1] = g;
+      d[i + 2] = b;
+    }
+
+    this.mainCanvasContext?.putImageData(data, 0, 0);
+  }
+  
+  }
+
   formatBytes(bytes: any, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
 
@@ -352,6 +381,7 @@ export class AppHome extends LitElement {
         Open Image
         <ion-icon name="image-outline"></ion-icon>
       </button>
+      
     </app-header>
     
     <div>
@@ -379,6 +409,11 @@ export class AppHome extends LitElement {
         <button @click="${() => this.enhance()}">
           brighten
           <ion-icon name="sunny-outline"></ion-icon>
+        </button>
+
+        <button @click="${() => this.saturate()}">
+          saturate
+          <ion-icon name="bulb-outline"></ion-icon>
         </button>
 
         ${
