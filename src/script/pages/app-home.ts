@@ -29,6 +29,17 @@ export class AppHome extends LitElement {
 
   static get styles() {
     return css`
+
+      #welcome {
+        color: white;
+        display: flex;
+        flex-direction: column;
+        margin: 4em;
+        align-items: center;
+        text-align: center;
+        font-weight: bold;
+      }
+
       #toolbar {
         position: fixed;
         bottom: 0;
@@ -42,7 +53,7 @@ export class AppHome extends LitElement {
         justify-content: flex-end;
       }
 
-      #toolbar button, app-header button {
+      #toolbar button, app-header button, #welcome button {
         border: none;
         padding: 10px;
         font-weight: bold;
@@ -414,6 +425,21 @@ export class AppHome extends LitElement {
         }
       </div>
       ` : null}
+
+      ${
+        !this.imageOpened ? html`
+          <div id="welcome">
+            <p>
+              Welcome! Make quick, simple edits to any image, tap "Open Image" to get started!
+            </p>
+
+            <button id="openButton" @click="${() => this.openImage()}">
+              Open Image
+              <ion-icon name="image-outline"></ion-icon>
+            </button>
+          </div>
+        ` : null
+      }
 
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
         <canvas id="onScreenCanvas"></canvas>
