@@ -1,11 +1,8 @@
 import { LitElement, css, html, customElement, property } from 'lit-element';
 
-// @ts-ignore
-import * as Magick from 'https://knicknic.github.io/wasm-imagemagick/magickApi.js';
 
-import { fileOpen } from 'browser-nativefs';
+import { fileOpen, fileSave } from 'browser-nativefs';
 
-import 'pinch-zoom-element';
 
 // For more info on the @pwabuilder/pwainstall component click here https://github.com/pwa-builder/pwa-install
 import '@pwabuilder/pwainstall';
@@ -20,7 +17,7 @@ export class AppHome extends LitElement {
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
-  imageBlob: Blob | File | File[] | null = null;
+  imageBlob: File | File[] | null = null;
 
   static get styles() {
     return css`
@@ -31,7 +28,7 @@ export class AppHome extends LitElement {
         right: 0;
         /* width: 100%; */
         padding: 12px;
-        background: #262626d1;
+        background: var(--app-color-primary);
         backdrop-filter: blur(8px);
         display: flex;
         justify-content: flex-end;
@@ -48,10 +45,15 @@ export class AppHome extends LitElement {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-size: 14px;
+      }
+
+      #openButton {
+        background: var(--app-color-secondary);
       }
 
       #saveButton {
-        background: var(--app-color-secondary);
+        background: #5c2e91;
       }
 
       pwa-install {
@@ -69,9 +71,51 @@ export class AppHome extends LitElement {
         margin-left: 6px;
       }
 
-      @media(spanning: single-fold-vertical) {
+      #fileInfo {
+        color: white;
+        margin: 10px;
+      }
+
+      canvas {
+        background: #181818;
+      }
+
+      @media(screen-spanning: single-fold-vertical) {
         #welcomeBlock {
           width: 50%;
+        }
+
+        #toolbar {
+          left: calc(env(fold-right) - 1px);
+          height: 89%;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+        }
+
+        #toolbar button {
+          margin-bottom: 10px;
+        }
+      }
+
+      @media(screen-spanning: single-fold-horizontal) {
+        #toolbar {
+          height: calc(env(fold-top) - 23px);
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+        }
+
+        #toolbar button {
+          margin-bottom: 10px;
+        }
+      }
+
+      @media(min-width: 1200px) {
+        #toolbar {
+          top: 3.5em;
+          bottom: initial;
+          justify-content: flex-start;
         }
       }
     `;
@@ -88,8 +132,27 @@ export class AppHome extends LitElement {
 
     this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
 
-    this.mainCanvas.height = window.innerHeight - 80;
-    this.mainCanvas.width = window.innerWidth;
+    const screenSegments = (window as any).getWindowSegments();
+    if (screenSegments.length > 1) {
+      // now we know the device is a foldable
+      // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
+      // and we can update CSS classes in our layout as appropriate 
+
+      // other changes as required for layout
+
+      if (screenSegments[0].width === screenSegments[1].width) {
+        this.mainCanvas.height = screenSegments[0].height - 60;
+        this.mainCanvas.width = screenSegments[0].width + 1;
+      }
+      else {
+        this.mainCanvas.height = window.innerHeight - 60;
+        this.mainCanvas.width = screenSegments[0].width + 1;
+      }
+    }
+    else {
+      this.mainCanvas.height = window.innerHeight - 60;
+      this.mainCanvas.width = window.innerWidth;
+    }
 
     if (this.mainCanvas) {
       this.mainCanvasContext = (this.mainCanvas.getContext('2d') as CanvasRenderingContext2D);
@@ -101,16 +164,22 @@ export class AppHome extends LitElement {
       mimeTypes: ['image/*'],
     });
 
-    const img = new Image(window.innerWidth, window.innerHeight);
+    const img = new Image();
 
     img.onload = () => {
-
       if (this.mainCanvas) {
-        this.mainCanvas.height = this.mainCanvas.width;
+
+        // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
+        const hRatio = this.mainCanvas.width / img.naturalWidth;
+        const vRatio = this.mainCanvas.height / img.naturalHeight;
+        const ratio = Math.min(hRatio, vRatio);
+        const centerShift_x = (this.mainCanvas.width - img.naturalWidth * ratio) / 2;
+        const centerShift_y = (this.mainCanvas.height - img.naturalHeight * ratio) / 2;
 
         this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
 
-        this.mainCanvasContext?.drawImage(img, 0, 0, this.mainCanvas.width, this.mainCanvas.height);
+        this.mainCanvasContext?.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight,
+          centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
 
         this.imageOpened = true;
       }
@@ -119,27 +188,15 @@ export class AppHome extends LitElement {
     img.src = URL.createObjectURL(this.imageBlob);
   }
 
-  async rotate() {
-    const data = await (this.imageBlob as any).arrayBuffer();
-    let magikData = await Magick.Call([{ 'name': 'srcFile.png', 'content': new Uint8Array(data) }], ["convert", "srcFile.png", "-rotate", "90", "out.png"]);
-
-    this.imageBlob = magikData[0].blob;
-
-    const img = new Image(window.innerWidth, window.innerHeight);
-
-    img.onload = () => {
-      if (this.mainCanvas) {
-        this.mainCanvas.height = this.mainCanvas.width;
-
-        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-
-        this.mainCanvasContext?.drawImage(img, 0, 0, this.mainCanvas.width, this.mainCanvas.height);
-
-        this.imageOpened = true;
+  async saveImage() {
+    this.mainCanvas?.toBlob(async (blob) => {
+      if (blob) {
+        await fileSave(blob, {
+          fileName: 'Untitled.png',
+          extensions: ['.png'],
+        });
       }
-    }
-
-    img.src = URL.createObjectURL(this.imageBlob);
+    });
   }
 
   async enhance(adjustment = 40) {
@@ -199,16 +256,28 @@ export class AppHome extends LitElement {
     }
   }
 
+  formatBytes(bytes: any, decimals = 2) {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+
   render() {
     return html`
     <app-header>
 
-      ${this.imageOpened ? html`<button id="saveButton" @click="${() => this.openImage()}">
-        Save Image
+      ${this.imageOpened ? html`<button id="saveButton" @click="${() => this.saveImage()}">
+        Save Copy
         <ion-icon name="save-outline"></ion-icon>
       </button>` : null}
       
-      <button @click="${() => this.openImage()}">
+      <button id="openButton" @click="${() => this.openImage()}">
         Open Image
         <ion-icon name="image-outline"></ion-icon>
       </button>
@@ -219,6 +288,14 @@ export class AppHome extends LitElement {
       ${
       this.imageOpened ? html`
         <div id="toolbar">
+        ${(window as any).getWindowSegments().length > 1 ? html`<div id="fileInfo">
+          <h3>
+            ${this.imageBlob ? (this.imageBlob as File).name : "No File Name"}
+          </h3>
+
+      <p>Size: ${this.imageBlob ? this.formatBytes((this.imageBlob as File).size) : null}</p>
+        </div>` : null}
+
                   <button @click="${() => this.invert()}">
                     invert
                     <ion-icon name="partly-sunny-outline"></ion-icon>
@@ -233,18 +310,10 @@ export class AppHome extends LitElement {
                     brighten
                     <ion-icon name="sunny-outline"></ion-icon>
                   </button>
-
-                  <button @click="${() => this.rotate()}">
-                    rotate
-                    <ion-icon name="refresh-circle-outline"></ion-icon>
-                  </button>
         </div>
         ` : null}
 
-
-        <pinch-zoom>
           <canvas id="onScreenCanvas"></canvas>
-        </pinch-zoom>
       </div>
     `;
   }

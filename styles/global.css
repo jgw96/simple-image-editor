@@ -4,8 +4,8 @@
   Check here https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties for more info on using CSS variables.
 */
 :root {
-  --app-color-primary: #262626;
-  --app-color-secondary: #215bd8;
+  --app-color-primary: #201f1e;
+  --app-color-secondary: #2b579a;
   --font-family: sans-serif;
 }
 
@@ -13,4 +13,6 @@ html, body {
   font-family: var(--font-family);
   padding: 0;
   margin: 0;
+  overflow: hidden;
+  background: #181818;
 }
