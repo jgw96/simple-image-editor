@@ -17,7 +17,7 @@ export class AppHome extends LitElement {
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
-  imageBlob: File | File[] | null = null;
+  imageBlob: File | File[] | Blob | null = null;
 
   static get styles() {
     return css`
@@ -48,14 +48,6 @@ export class AppHome extends LitElement {
         font-size: 14px;
       }
 
-      #openButton {
-        background: var(--app-color-secondary);
-      }
-
-      #saveButton {
-        background: #5c2e91;
-      }
-
       pwa-install {
         position: absolute;
         bottom: 16px;
@@ -78,6 +70,17 @@ export class AppHome extends LitElement {
 
       canvas {
         background: #181818;
+      }
+
+      #dualExtras {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        color: white;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 10px;
       }
 
       @media(screen-spanning: single-fold-vertical) {
@@ -118,6 +121,14 @@ export class AppHome extends LitElement {
           justify-content: flex-start;
         }
       }
+
+      #openButton {
+        background: var(--app-color-secondary) !important;
+      }
+
+      #saveButton {
+        background: #5c2e91 !important;
+      }
     `;
   }
 
@@ -126,10 +137,6 @@ export class AppHome extends LitElement {
   }
 
   firstUpdated() {
-    // this method is a lifecycle even in lit-element
-    // for more info check out the lit-element docs https://lit-element.polymer-project.org/guide/lifecycle
-    console.log('This is your home page');
-
     this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
 
     const screenSegments = (window as any).getWindowSegments();
@@ -157,6 +164,43 @@ export class AppHome extends LitElement {
     if (this.mainCanvas) {
       this.mainCanvasContext = (this.mainCanvas.getContext('2d') as CanvasRenderingContext2D);
     }
+
+    navigator.serviceWorker.onmessage = (event) => {
+      console.log(event);
+      const imageBlob = event.data.file;
+
+      if (imageBlob) {
+        this.handleSharedImage(imageBlob);
+      }
+      
+    };
+  }
+
+  handleSharedImage(blob: Blob) {
+    const img = new Image();
+
+    img.onload = () => {
+      if (this.mainCanvas) {
+
+        // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
+        const hRatio = this.mainCanvas.width / img.naturalWidth;
+        const vRatio = this.mainCanvas.height / img.naturalHeight;
+        const ratio = Math.min(hRatio, vRatio);
+        const centerShift_x = (this.mainCanvas.width - img.naturalWidth * ratio) / 2;
+        const centerShift_y = (this.mainCanvas.height - img.naturalHeight * ratio) / 2;
+
+        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
+
+        this.mainCanvasContext?.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight,
+          centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+
+        this.imageOpened = true;
+      }
+    }
+
+    img.src = URL.createObjectURL(blob);
+
+    this.imageBlob = blob;
   }
 
   async openImage() {
@@ -195,6 +239,26 @@ export class AppHome extends LitElement {
           fileName: 'Untitled.png',
           extensions: ['.png'],
         });
+      }
+    });
+  }
+
+  shareImage() {
+    this.mainCanvas?.toBlob(async (blob) => {
+      if (blob) {
+        const file = new File([blob], "untitled.png", {
+          type: "image/png"
+        });
+
+        if ((navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
+          await (navigator as any).share({
+            files: [file],
+            title: 'Edited image',
+            text: 'edited image',
+          })
+        } else {
+          console.log(`Your system doesn't support sharing files.`);
+        }
       }
     });
   }
@@ -272,49 +336,71 @@ export class AppHome extends LitElement {
     return html`
     <app-header>
 
-      ${this.imageOpened ? html`<button id="saveButton" @click="${() => this.saveImage()}">
+    ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<button @click="${() => this.shareImage()}">
+        Share
+        <ion-icon name="share-outline"></ion-icon>
+      </button>` : null}
+    
+      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<button id="saveButton" @click="${() => this.saveImage()}">
         Save Copy
         <ion-icon name="save-outline"></ion-icon>
       </button>` : null}
-      
+    
       <button id="openButton" @click="${() => this.openImage()}">
         Open Image
         <ion-icon name="image-outline"></ion-icon>
       </button>
     </app-header>
-
-      <div>
-
-      ${
-      this.imageOpened ? html`
-        <div id="toolbar">
+    
+    <div>
+    
+      ${this.imageOpened ? html`
+      <div id="toolbar">
         ${(window as any).getWindowSegments().length > 1 ? html`<div id="fileInfo">
           <h3>
             ${this.imageBlob ? (this.imageBlob as File).name : "No File Name"}
           </h3>
-
-      <p>Size: ${this.imageBlob ? this.formatBytes((this.imageBlob as File).size) : null}</p>
+    
+          <p>Size: ${this.imageBlob ? this.formatBytes((this.imageBlob as File).size) : null}</p>
         </div>` : null}
+    
+        <button @click="${() => this.invert()}">
+          invert
+          <ion-icon name="partly-sunny-outline"></ion-icon>
+        </button>
+    
+        <button @click="${() => this.blackAndWhite()}">
+          grayscale
+          <ion-icon name="contrast-outline"></ion-icon>
+        </button>
+    
+        <button @click="${() => this.enhance()}">
+          brighten
+          <ion-icon name="sunny-outline"></ion-icon>
+        </button>
 
-                  <button @click="${() => this.invert()}">
-                    invert
-                    <ion-icon name="partly-sunny-outline"></ion-icon>
-                  </button>
+        ${
+          (window as any).getWindowSegments().length > 1 ? html`
+            <div id="dualExtras">
 
-                  <button @click="${() => this.blackAndWhite()}">
-                    grayscale
-                    <ion-icon name="contrast-outline"></ion-icon>
-                  </button>
+              <button @click="${() => this.shareImage()}">
+                Share
+                <ion-icon name="share-outline"></ion-icon>
+              </button>
 
-                  <button @click="${() => this.enhance()}">
-                    brighten
-                    <ion-icon name="sunny-outline"></ion-icon>
-                  </button>
-        </div>
-        ` : null}
-
-          <canvas id="onScreenCanvas"></canvas>
+              <button id="saveButton" @click="${() => this.saveImage()}">
+                Save Copy
+                <ion-icon name="save-outline"></ion-icon>
+              </button>
+              
+            </div>
+          ` : null
+        }
       </div>
+      ` : null}
+    
+      <canvas id="onScreenCanvas"></canvas>
+    </div>
     `;
   }
 }
