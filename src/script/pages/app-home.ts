@@ -3,6 +3,9 @@ import { LitElement, css, html, customElement, property } from 'lit-element';
 
 import { fileOpen, fileSave } from 'browser-nativefs';
 
+//@ts-ignore
+import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
+
 import '../components/drag-drop';
 
 
@@ -20,6 +23,9 @@ export class AppHome extends LitElement {
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
   imageBlob: File | File[] | Blob | null = null;
+
+  worker: any;
+  img: any;
 
   static get styles() {
     return css`
@@ -138,7 +144,16 @@ export class AppHome extends LitElement {
     super();
   }
 
+  async init() {
+    const underlying = new Worker("/assets/workers/worker.js");
+    // WebWorkers use `postMessage` and therefore work with Comlink.
+    this.worker = Comlink.wrap(underlying);
+  }
+
   firstUpdated() {
+    this.init();
+
+
     this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
 
     const screenSegments = (window as any).getWindowSegments();
@@ -179,28 +194,28 @@ export class AppHome extends LitElement {
   }
 
   handleSharedImage(blob: Blob) {
-    const img = new Image();
+    this.img = new Image();
 
-    img.onload = () => {
+    this.img.onload = () => {
       if (this.mainCanvas) {
 
         // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
-        const hRatio = this.mainCanvas.width / img.naturalWidth;
-        const vRatio = this.mainCanvas.height / img.naturalHeight;
+        const hRatio = this.mainCanvas.width / this.img.naturalWidth;
+        const vRatio = this.mainCanvas.height / this.img.naturalHeight;
         const ratio = Math.min(hRatio, vRatio);
-        const centerShift_x = (this.mainCanvas.width - img.naturalWidth * ratio) / 2;
-        const centerShift_y = (this.mainCanvas.height - img.naturalHeight * ratio) / 2;
+        const centerShift_x = (this.mainCanvas.width - this.img.naturalWidth * ratio) / 2;
+        const centerShift_y = (this.mainCanvas.height - this.img.naturalHeight * ratio) / 2;
 
         this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
 
-        this.mainCanvasContext?.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight,
-          centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+        this.mainCanvasContext?.drawImage(this.img, 0, 0, this.img.naturalWidth, this.img.naturalHeight,
+          centerShift_x, centerShift_y, this.img.width * ratio, this.img.height * ratio);
 
         this.imageOpened = true;
       }
     }
 
-    img.src = URL.createObjectURL(blob);
+    this.img.src = URL.createObjectURL(blob);
 
     this.imageBlob = blob;
   }
@@ -210,28 +225,28 @@ export class AppHome extends LitElement {
       mimeTypes: ['image/*'],
     });
 
-    const img = new Image();
+    this.img = new Image();
 
-    img.onload = () => {
+    this.img.onload = () => {
       if (this.mainCanvas) {
 
         // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
-        const hRatio = this.mainCanvas.width / img.naturalWidth;
-        const vRatio = this.mainCanvas.height / img.naturalHeight;
+        const hRatio = this.mainCanvas.width / this.img.naturalWidth;
+        const vRatio = this.mainCanvas.height / this.img.naturalHeight;
         const ratio = Math.min(hRatio, vRatio);
-        const centerShift_x = (this.mainCanvas.width - img.naturalWidth * ratio) / 2;
-        const centerShift_y = (this.mainCanvas.height - img.naturalHeight * ratio) / 2;
+        const centerShift_x = (this.mainCanvas.width - this.img.naturalWidth * ratio) / 2;
+        const centerShift_y = (this.mainCanvas.height - this.img.naturalHeight * ratio) / 2;
 
         this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
 
-        this.mainCanvasContext?.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight,
-          centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+        this.mainCanvasContext?.drawImage(this.img, 0, 0, this.img.naturalWidth, this.img.naturalHeight,
+          centerShift_x, centerShift_y, this.img.width * ratio, this.img.height * ratio);
 
         this.imageOpened = true;
       }
     }
 
-    img.src = URL.createObjectURL(this.imageBlob);
+    this.img.src = URL.createObjectURL(this.imageBlob);
   }
 
   async saveImage() {
@@ -265,89 +280,53 @@ export class AppHome extends LitElement {
     });
   }
 
-  async enhance(adjustment = 40) {
+  async enhance() {
     const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-    console.log(data);
 
     if (data) {
       const d = data.data;
 
-      for (var i = 0; i < d.length; i += 4) {
-        d[i] += adjustment;
-        d[i + 1] += adjustment;
-        d[i + 2] += adjustment;
-      }
+      const data2 = await this.worker.enhance(d, data.width, data.height);
 
-      this.mainCanvasContext?.putImageData(data, 0, 0);
+      this.mainCanvasContext?.putImageData(data2, 0, 0);
     }
   }
 
   async blackAndWhite() {
     const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-    console.log(data);
 
     if (data) {
       const d = data.data;
 
-      for (var i = 0; i < d.length; i += 4) {
-        let r = d[i];
-        let g = d[i + 1];
-        let b = d[i + 2];
-        // CIE luminance for the RGB
-        // The human eye is bad at seeing red and blue, so we de-emphasize them.
-        let v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        d[i] = d[i + 1] = d[i + 2] = v
-      }
+      const data2 = await this.worker.blackAndWhite(d, data.width, data.height);
 
-      this.mainCanvasContext?.putImageData(data, 0, 0);
+      this.mainCanvasContext?.putImageData(data2, 0, 0);
     }
   }
 
   async invert() {
     const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-    console.log(data);
 
     if (data) {
       const d = data.data;
 
-      for (var i = 0; i < d.length; i += 4) {
-        var r = d[i];
-        var g = d[i + 1];
-        var b = d[i + 2];
-        var v = (0.2126 * r + 0.7152 * g + 0.0722 * b >= 90) ? 255 : 0;
-        d[i] = d[i + 1] = d[i + 2] = v
-      }
+      const data2 = await this.worker.invert(d, data.width, data.height)
 
-      this.mainCanvasContext?.putImageData(data, 0, 0);
+      this.mainCanvasContext?.putImageData(data2, 0, 0);
     }
   }
 
-  saturate() {
+  async saturate() {
 // https://github.com/klouskingsley/imagedata-filters/blob/master/src/filters/saturate.js
     const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
 
-    const amount = 2;
 
     if (data) {
       const d = data.data;
-    for (let i = 0; i < d.length; i += 4) {
-      let r = (.213 + .787 * amount) * d[i]
-          + (.715 - .715 * amount) * d[i + 1]
-          + (.072 - .072 * amount) * d[i + 2];
-      let g = (.213 - .213 * amount) * d[i]
-          + (.715 + .285 * amount) * d[i + 1]
-          + (.072 - .072 * amount) * d[i + 2];
-      let b = (.213 - .213 * amount) * d[i];
-          + (.715 - .715 * amount) * d[i + 1]
-          + (.072 + .928 * amount) * d[i + 2];
-      
-      d[i] = r;
-      d[i + 1] = g;
-      d[i + 2] = b;
-    }
+      const data2 = await this.worker.saturate(d, data.width, data.height);
 
-    this.mainCanvasContext?.putImageData(data, 0, 0);
-  }
+      this.mainCanvasContext?.putImageData(data2, 0, 0);
+    }
   
   }
 

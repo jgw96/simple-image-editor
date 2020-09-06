@@ -49,8 +49,11 @@ export class AppIndex extends LitElement {
   constructor() {
     super();
   }
+  
 
   firstUpdated() {
+
+    
     // this method is a lifecycle even in lit-element
     // for more info check out the lit-element docs https://lit-element.polymer-project.org/guide/lifecycle
 
