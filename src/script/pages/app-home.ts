@@ -103,8 +103,11 @@ export class AppHome extends LitElement {
       }
 
       @media(screen-spanning: single-fold-vertical) {
-        #welcomeBlock {
-          width: 50%;
+        #welcome {
+          position: absolute;
+          right: env(fold-left);
+          justify-content: center;
+          align-items: center;
         }
 
         #toolbar {
