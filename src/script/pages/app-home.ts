@@ -3,6 +3,8 @@ import { LitElement, css, html, customElement, property } from 'lit-element';
 
 import { fileOpen, fileSave } from 'browser-nativefs';
 
+import '../components/drag-drop';
+
 
 // For more info on the @pwabuilder/pwainstall component click here https://github.com/pwa-builder/pwa-install
 import '@pwabuilder/pwainstall';
@@ -398,8 +400,10 @@ export class AppHome extends LitElement {
         }
       </div>
       ` : null}
-    
-      <canvas id="onScreenCanvas"></canvas>
+
+      <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
+        <canvas id="onScreenCanvas"></canvas>
+      </drag-drop>
     </div>
     `;
   }
