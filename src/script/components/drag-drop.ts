@@ -1,10 +1,8 @@
-import { LitElement, css, html, customElement, property } from 'lit-element';
+import { LitElement, css, html, customElement } from 'lit-element';
 
 
 @customElement('drag-drop')
 export class DragDrop extends LitElement {
-
-    @property({ type: String }) title: string = 'SimpleEdit';
 
     static get styles() {
         return css`
@@ -50,6 +48,8 @@ export class DragDrop extends LitElement {
                     }
                 });
                 this.dispatchEvent(event);
+
+                return;
             }
         }
     }
@@ -59,6 +59,7 @@ export class DragDrop extends LitElement {
 
         // Prevent default behavior (Prevent file from being opened)
         ev.preventDefault();
+        
     }
 
     render() {
