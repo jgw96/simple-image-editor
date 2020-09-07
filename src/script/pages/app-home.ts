@@ -344,6 +344,31 @@ export class AppHome extends LitElement {
   
   }
 
+  async rotate() {
+    const underlying = new Worker("/assets/workers/rotate.worker.js");
+    // WebWorkers use `postMessage` and therefore work with Comlink.
+    const rotateWorker = Comlink.wrap(underlying);
+
+    this.mainCanvas?.toBlob(async (blob1) => {
+
+      this.img = new Image();
+
+      this.img.onload = async () => {
+
+        const bitmap = await window.createImageBitmap(this.img);
+
+        const blob = await rotateWorker.rotateImageOffscreen(this.mainCanvas?.width, this.mainCanvas?.height, bitmap);
+
+        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
+
+        this.handleSharedImage(blob);
+      };
+
+
+      this.img.src = URL.createObjectURL(blob1);
+    })
+  }
+
   formatBytes(bytes: any, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
 
@@ -407,6 +432,11 @@ export class AppHome extends LitElement {
         <button @click="${() => this.saturate()}">
           saturate
           <ion-icon name="bulb-outline"></ion-icon>
+        </button>
+
+        <button @click="${() => this.rotate()}">
+          rotate
+          <ion-icon name="refresh-outline"></ion-icon>
         </button>
 
         ${
