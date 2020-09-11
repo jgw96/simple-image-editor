@@ -19,10 +19,11 @@ export class AppHome extends LitElement {
   // check out this link https://lit-element.polymer-project.org/guide/properties#declare-with-decorators
   @property() message: string = "Welcome!";
   @property() imageOpened: boolean = false;
+  @property() imageBlob: File | File[] | Blob | null = null;
+  @property() originalBlob: File | File[] | Blob | null = null;
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
-  imageBlob: File | File[] | Blob | null = null;
 
   worker: any;
   img: any;
@@ -53,33 +54,14 @@ export class AppHome extends LitElement {
         justify-content: flex-end;
       }
 
-      #toolbar button, app-header button, #welcome button {
-        border: none;
-        padding: 10px;
-        font-weight: bold;
-        border-radius: 6px;
-        color: white;
-        background: #181818;
+      #toolbar fast-button, app-header fast-button, #welcome fast-button {
         margin-left: 6px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 14px;
       }
 
       pwa-install {
         position: absolute;
         bottom: 16px;
         right: 16px;
-      }
-
-      button {
-        cursor: pointer;
-      }
-
-      button ion-icon {
-        font-size: 18px;
-        margin-left: 6px;
       }
 
       #fileInfo {
@@ -99,28 +81,8 @@ export class AppHome extends LitElement {
         width: 100%;
         display: flex;
         justify-content: flex-end;
-        padding-right: 10px;
-      }
-
-      @media(screen-spanning: single-fold-vertical) {
-        #welcome {
-          position: absolute;
-          right: env(fold-left);
-          justify-content: center;
-          align-items: center;
-        }
-
-        #toolbar {
-          left: calc(env(fold-right) - 1px);
-          height: 89%;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-        }
-
-        #toolbar button {
-          margin-bottom: 10px;
-        }
+        padding: 10px;
+        padding-right: 6px;
       }
 
       @media(screen-spanning: single-fold-horizontal) {
@@ -141,6 +103,45 @@ export class AppHome extends LitElement {
           top: 3.5em;
           bottom: initial;
           justify-content: flex-start;
+        }
+      }
+
+      @media(max-width: 1200px) {
+        #toolbar {
+          display: initial;
+          overflow-x: auto;
+          overflow-y: hidden;
+          white-space: nowrap;
+        }
+
+        #shareButton {
+          position: absolute;
+          bottom: 5em;
+          right: 12px;
+        }
+      }
+
+      @media(screen-spanning: single-fold-vertical) {
+        #welcome {
+          position: absolute;
+          right: env(fold-left);
+          justify-content: center;
+          align-items: center;
+        }
+
+        #toolbar {
+          left: calc(env(fold-right) - 1px);
+          height: 89%;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+
+          overflow: initial;
+          white-space: initial;
+        }
+
+        #toolbar fast-button {
+          margin-bottom: 10px;
         }
       }
 
@@ -231,13 +232,17 @@ export class AppHome extends LitElement {
 
     this.img.src = URL.createObjectURL(blob);
 
-    this.imageBlob = blob;
+    this.originalBlob = blob;
+
+    this.imageBlob = this.originalBlob;
   }
 
   async openImage() {
-    this.imageBlob = await fileOpen({
+    this.originalBlob = await fileOpen({
       mimeTypes: ['image/*'],
     });
+
+    this.imageBlob = this.originalBlob;
 
     this.img = new Image();
 
@@ -369,6 +374,10 @@ export class AppHome extends LitElement {
     })
   }
 
+  async revert() {
+    this.handleSharedImage((this.originalBlob as Blob));
+  }
+
   formatBytes(bytes: any, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
 
@@ -385,20 +394,20 @@ export class AppHome extends LitElement {
     return html`
     <app-header>
 
-    ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<button @click="${() => this.shareImage()}">
+    ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="shareButton" @click="${() => this.shareImage()}">
         Share
         <ion-icon name="share-outline"></ion-icon>
-      </button>` : null}
+      </fast-button>` : null}
     
-      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<button id="saveButton" @click="${() => this.saveImage()}">
+      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="saveButton" @click="${() => this.saveImage()}">
         Save Copy
         <ion-icon name="save-outline"></ion-icon>
-      </button>` : null}
+      </fast-button>` : null}
     
-      <button id="openButton" @click="${() => this.openImage()}">
+      <fast-button id="openButton" @click="${() => this.openImage()}">
         Open Image
         <ion-icon name="image-outline"></ion-icon>
-      </button>
+      </fast-button>
       
     </app-header>
     
@@ -413,45 +422,50 @@ export class AppHome extends LitElement {
     
           <p>Size: ${this.imageBlob ? this.formatBytes((this.imageBlob as File).size) : null}</p>
         </div>` : null}
+
+        <fast-button @click="${() => this.revert()}">
+          revert
+          <ion-icon name="refresh-outline"></ion-icon>
+        </fast-button>
     
-        <button @click="${() => this.invert()}">
+        <fast-button @click="${() => this.invert()}">
           invert
           <ion-icon name="partly-sunny-outline"></ion-icon>
-        </button>
+        </fast-button>
     
-        <button @click="${() => this.blackAndWhite()}">
+        <fast-button @click="${() => this.blackAndWhite()}">
           grayscale
           <ion-icon name="contrast-outline"></ion-icon>
-        </button>
+        </fast-button>
     
-        <button @click="${() => this.enhance()}">
+        <fast-button @click="${() => this.enhance()}">
           brighten
           <ion-icon name="sunny-outline"></ion-icon>
-        </button>
+        </fast-button>
 
-        <button @click="${() => this.saturate()}">
+        <fast-button @click="${() => this.saturate()}">
           saturate
           <ion-icon name="bulb-outline"></ion-icon>
-        </button>
+        </fast-button>
 
-        <button @click="${() => this.rotate()}">
+        <fast-button @click="${() => this.rotate()}">
           rotate
-          <ion-icon name="refresh-outline"></ion-icon>
-        </button>
+          <ion-icon name="disc-outline"></ion-icon>
+        </fast-button>
 
         ${
           (window as any).getWindowSegments().length > 1 ? html`
             <div id="dualExtras">
 
-              <button @click="${() => this.shareImage()}">
+              <fast-button @click="${() => this.shareImage()}">
                 Share
                 <ion-icon name="share-outline"></ion-icon>
-              </button>
+              </fast-button>
 
-              <button id="saveButton" @click="${() => this.saveImage()}">
+              <fast-button id="saveButton" @click="${() => this.saveImage()}">
                 Save Copy
                 <ion-icon name="save-outline"></ion-icon>
-              </button>
+              </fast-button>
               
             </div>
           ` : null
@@ -466,10 +480,10 @@ export class AppHome extends LitElement {
               Welcome! Make quick, simple edits to any image, tap "Open Image" to get started!
             </p>
 
-            <button id="openButton" @click="${() => this.openImage()}">
+            <fast-button appearance="primary" id="openButton" @click="${() => this.openImage()}">
               Open Image
               <ion-icon name="image-outline"></ion-icon>
-            </button>
+            </fast-button>
           </div>
         ` : null
       }
