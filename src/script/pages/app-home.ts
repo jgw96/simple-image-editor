@@ -531,6 +531,8 @@ export class AppHome extends LitElement {
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
         <canvas id="onScreenCanvas"></canvas>
       </drag-drop>
+
+      <pwa-install>Install SimpleEdit</pwa-install>
     </div>
     `;
   }
