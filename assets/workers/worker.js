@@ -75,6 +75,38 @@ const obj = {
 
     return image;
   },
+
+  async doAI(canvasImage) {
+    const splitData = canvasImage.split(',')[1];
+  
+    const bytes = self.atob(splitData);
+    const buf = new ArrayBuffer(bytes.length);
+    let byteArr = new Uint8Array(buf);
+  
+    for (var i = 0; i < bytes.length; i++) {
+      byteArr[i] = bytes.charCodeAt(i);
+    }
+  
+    let data = null;
+  
+    try {
+      const response = await fetch(`https://westus2.api.cognitive.microsoft.com/vision/v3.0/generateThumbnail?width=400&height=450&smartCropping=true`, {
+        headers: {
+          "Ocp-Apim-Subscription-Key": "d930861b5bba49e5939b843f9c4e5846",
+          "Content-Type": "application/octet-stream"
+        },
+        method: "POST",
+        body: byteArr
+      });
+      data = await response.blob();
+  
+      return data;
+  
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  }
 };
 // @ts-ignore
 Comlink.expose(obj);

@@ -116,8 +116,20 @@ export class AppHome extends LitElement {
 
         #shareButton {
           position: absolute;
-          bottom: 5em;
-          right: 12px;
+          top: 5em;
+          right: 6px;
+        }
+
+        #revertButton {
+          position: absolute;
+          top: 5em;
+          right: 88px;
+        }
+
+        #cropButton {
+          position: absolute;
+          top: 5em;
+          right: 169px;
         }
       }
 
@@ -349,6 +361,19 @@ export class AppHome extends LitElement {
   
   }
 
+  async crop() {
+    const canvasData = this.mainCanvas?.toDataURL();
+
+    const blob = await this.worker.doAI(canvasData);
+
+    if (blob) {
+      await fileSave(blob, {
+        fileName: 'Untitled.png',
+        extensions: ['.png'],
+      });
+    }
+  }
+
   async rotate() {
     const underlying = new Worker("/assets/workers/rotate.worker.js");
     // WebWorkers use `postMessage` and therefore work with Comlink.
@@ -398,6 +423,16 @@ export class AppHome extends LitElement {
         Share
         <ion-icon name="share-outline"></ion-icon>
       </fast-button>` : null}
+
+      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="cropButton" @click="${() => this.crop()}">
+          Auto Thumbnail
+          <ion-icon name="crop-outline"></ion-icon>
+        </fast-button>` : null }
+
+      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="revertButton" @click="${() => this.revert()}">
+          revert
+          <ion-icon name="refresh-outline"></ion-icon>
+        </fast-button>` : null}
     
       ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="saveButton" @click="${() => this.saveImage()}">
         Save Copy
@@ -422,11 +457,6 @@ export class AppHome extends LitElement {
     
           <p>Size: ${this.imageBlob ? this.formatBytes((this.imageBlob as File).size) : null}</p>
         </div>` : null}
-
-        <fast-button @click="${() => this.revert()}">
-          revert
-          <ion-icon name="refresh-outline"></ion-icon>
-        </fast-button>
     
         <fast-button @click="${() => this.invert()}">
           invert
@@ -460,6 +490,16 @@ export class AppHome extends LitElement {
               <fast-button @click="${() => this.shareImage()}">
                 Share
                 <ion-icon name="share-outline"></ion-icon>
+              </fast-button>
+
+              <fast-button @click="${() => this.crop()}">
+                Auto Thumbnail
+                <ion-icon name="crop-outline"></ion-icon>
+              </fast-button>
+
+              <fast-button @click="${() => this.revert()}">
+                Revert
+                <ion-icon name="refresh-outline"></ion-icon>
               </fast-button>
 
               <fast-button id="saveButton" @click="${() => this.saveImage()}">
