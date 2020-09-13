@@ -183,21 +183,27 @@ export class AppHome extends LitElement {
 
     this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
 
-    const screenSegments = (window as any).getWindowSegments();
-    if (screenSegments.length > 1) {
-      // now we know the device is a foldable
-      // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
-      // and we can update CSS classes in our layout as appropriate 
+    if ((window as any).getWindowSegments) {
+      const screenSegments = (window as any).getWindowSegments();
+      if (screenSegments.length > 1) {
+        // now we know the device is a foldable
+        // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
+        // and we can update CSS classes in our layout as appropriate 
 
-      // other changes as required for layout
+        // other changes as required for layout
 
-      if (screenSegments[0].width === screenSegments[1].width) {
-        this.mainCanvas.height = screenSegments[0].height - 60;
-        this.mainCanvas.width = screenSegments[0].width + 1;
+        if (screenSegments[0].width === screenSegments[1].width) {
+          this.mainCanvas.height = screenSegments[0].height - 60;
+          this.mainCanvas.width = screenSegments[0].width + 1;
+        }
+        else {
+          this.mainCanvas.height = window.innerHeight - 60;
+          this.mainCanvas.width = screenSegments[0].width + 1;
+        }
       }
       else {
         this.mainCanvas.height = window.innerHeight - 60;
-        this.mainCanvas.width = screenSegments[0].width + 1;
+        this.mainCanvas.width = window.innerWidth;
       }
     }
     else {
@@ -415,26 +421,39 @@ export class AppHome extends LitElement {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
+  checkDual() {
+    if ((window as any).getWindowSegments) {
+      if ((window as any).getWindowSegments().length <= 1) {
+        return false;
+      }
+      else if ((window as any).getWindowSegments().length > 1) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   render() {
     return html`
     <app-header>
 
-    ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="shareButton" @click="${() => this.shareImage()}">
+    ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="shareButton" @click="${() => this.shareImage()}">
         Share
         <ion-icon name="share-outline"></ion-icon>
       </fast-button>` : null}
 
-      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="cropButton" @click="${() => this.crop()}">
+      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="cropButton" @click="${() => this.crop()}">
           Auto Thumbnail
           <ion-icon name="crop-outline"></ion-icon>
         </fast-button>` : null }
 
-      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="revertButton" @click="${() => this.revert()}">
+      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="revertButton" @click="${() => this.revert()}">
           revert
           <ion-icon name="refresh-outline"></ion-icon>
         </fast-button>` : null}
     
-      ${this.imageOpened && (window as any).getWindowSegments().length <= 1 ? html`<fast-button id="saveButton" @click="${() => this.saveImage()}">
+      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="saveButton" @click="${() => this.saveImage()}">
         Save Copy
         <ion-icon name="save-outline"></ion-icon>
       </fast-button>` : null}
@@ -450,7 +469,7 @@ export class AppHome extends LitElement {
     
       ${this.imageOpened ? html`
       <div id="toolbar">
-        ${(window as any).getWindowSegments().length > 1 ? html`<div id="fileInfo">
+        ${this.checkDual() === true ? html`<div id="fileInfo">
           <h3>
             ${this.imageBlob ? (this.imageBlob as File).name : "No File Name"}
           </h3>
@@ -484,7 +503,7 @@ export class AppHome extends LitElement {
         </fast-button>
 
         ${
-          (window as any).getWindowSegments().length > 1 ? html`
+          this.checkDual() === true ? html`
             <div id="dualExtras">
 
               <fast-button @click="${() => this.shareImage()}">
