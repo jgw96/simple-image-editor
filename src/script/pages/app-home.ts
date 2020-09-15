@@ -1,7 +1,7 @@
 import { LitElement, css, html, customElement, property } from 'lit-element';
 
 
-import { fileOpen, fileSave } from 'browser-nativefs';
+import { fileOpen, fileSave, FileSystemHandle } from 'browser-nativefs';
 
 //@ts-ignore
 import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
@@ -11,6 +11,7 @@ import '../components/drag-drop';
 
 // For more info on the @pwabuilder/pwainstall component click here https://github.com/pwa-builder/pwa-install
 import '@pwabuilder/pwainstall';
+import { clear, get, set } from 'idb-keyval';
 
 @customElement('app-home')
 export class AppHome extends LitElement {
@@ -21,6 +22,7 @@ export class AppHome extends LitElement {
   @property() imageOpened: boolean = false;
   @property() imageBlob: File | File[] | Blob | null = null;
   @property() originalBlob: File | File[] | Blob | null = null;
+  @property() latest: any[] | null = null;
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
@@ -30,6 +32,25 @@ export class AppHome extends LitElement {
 
   static get styles() {
     return css`
+
+      #latestBlock h3 {
+        text-align: initial;
+      }
+
+      #latestBlock fast-card {
+        margin-top: 1em;
+        padding: 0px;
+        padding-bottom: 12px;
+      }
+
+      #latestBlock {
+        width: 100%;
+      }
+
+      #latestBlock fast-card img {
+        object-fit: cover;
+        width: 100%;
+      }
 
       #welcome {
         color: white;
@@ -104,6 +125,23 @@ export class AppHome extends LitElement {
           bottom: initial;
           justify-content: flex-start;
         }
+
+        #recentsBlock {
+          display: flex;
+          justify-content: space-between;
+        }
+
+        #latestBlock {
+          margin-top: 2em;
+        }
+
+        #latestBlock fast-card {
+          margin-right: 1em;
+        }
+
+        #latestBlock fast-card img {
+          height: 300px;
+        }
       }
 
       @media(max-width: 1200px) {
@@ -112,6 +150,10 @@ export class AppHome extends LitElement {
           overflow-x: auto;
           overflow-y: hidden;
           white-space: nowrap;
+        }
+
+        #latestBlock {
+          margin-top: 2em;
         }
 
         #shareButton {
@@ -136,9 +178,29 @@ export class AppHome extends LitElement {
       @media(screen-spanning: single-fold-vertical) {
         #welcome {
           position: absolute;
-          right: env(fold-left);
           justify-content: center;
-          align-items: center;
+
+          display: flex;
+          flex-direction: row;
+          right: initial;
+          align-items: flex-start;
+          margin: 0;
+          margin-top: 1em;
+        }
+
+        #welcome #latestBlock {
+          flex: 1;
+          margin: 2em;
+          margin-right: 1em;
+          margin-top: 0em;
+          overflow: hidden;
+        }
+
+        #welcome #welcomeIntro {
+          margin-right: env(fold-width);
+          overflow-y: scroll;
+          flex: 0 0 calc(env(fold-left) - 49px);
+          margin-left: 2em;
         }
 
         #toolbar {
@@ -177,9 +239,8 @@ export class AppHome extends LitElement {
     this.worker = Comlink.wrap(underlying);
   }
 
-  firstUpdated() {
+  async firstUpdated() {
     this.init();
-
 
     this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
 
@@ -224,6 +285,8 @@ export class AppHome extends LitElement {
       }
       
     };
+
+    this.latest = await this.getLatest();
   }
 
   handleSharedImage(blob: Blob) {
@@ -255,10 +318,92 @@ export class AppHome extends LitElement {
     this.imageBlob = this.originalBlob;
   }
 
+  async handleRecent(handle: any) {
+    const existingPerm = await handle.queryPermission({
+      writable: true
+    });
+
+    if (existingPerm === "granted") {
+      const blob = await handle.getFile();
+      this.handleSharedImage(blob);
+    }
+    else {
+      const request = await handle.requestPermission({
+        writable: true
+      })
+  
+      console.log(request);
+  
+      if (request === "granted") {
+        const blob = await handle.getFile();
+        console.log(blob);
+  
+        this.handleSharedImage(blob);
+      }
+    }
+  }
+
+  async getLatest() {
+    const latest: Array<any> = await get('savedImages');
+
+    if (latest && latest.length > 0) {
+      return latest;
+    }
+    else {
+      return null;
+    }
+  }
+
+  async saveLatest(handle: FileSystemHandle) {
+   const latest: Array<any> = await get('savedImages');
+
+   if (latest && latest.length > 2) {
+     await clear();
+
+     const newImage = [{
+      name: handle.name,
+      handle: handle,
+      preview: this.originalBlob
+    }];
+
+     await set('savedImages',
+      newImage
+     );
+
+     return newImage;
+   }
+   else if (latest && latest.length > 0) {
+    const newImage = [...latest, {
+     name: handle.name,
+     handle: handle,
+     preview: this.originalBlob
+   }];
+   
+    await set('savedImages', newImage)
+
+    return newImage;
+  }
+   else {
+     const newImage = [{
+      name: handle.name,
+      handle: handle,
+      preview: this.originalBlob
+    }];
+
+     await set('savedImages',
+      newImage
+     );
+
+     return newImage;
+   }
+  }
+
   async openImage() {
     this.originalBlob = await fileOpen({
       mimeTypes: ['image/*'],
     });
+
+    this.latest = await this.saveLatest((this.originalBlob as any).handle);
 
     this.imageBlob = this.originalBlob;
 
@@ -535,14 +680,42 @@ export class AppHome extends LitElement {
       ${
         !this.imageOpened ? html`
           <div id="welcome">
-            <p>
-              Welcome! Make quick, simple edits to any image, tap "Open Image" to get started!
-            </p>
 
-            <fast-button appearance="primary" id="openButton" @click="${() => this.openImage()}">
-              Open Image
-              <ion-icon name="image-outline"></ion-icon>
-            </fast-button>
+            <div id="welcomeIntro">
+                  <p>
+                    Welcome! Make quick, simple edits to any image, tap "Open Image" to get started!
+                  </p>
+
+                  <fast-button appearance="primary" id="openButton" @click="${() => this.openImage()}">
+                    Open Image
+                    <ion-icon name="image-outline"></ion-icon>
+                  </fast-button>
+            </div>
+
+            ${
+              this.latest ? html`
+              <div id="latestBlock">
+                <h3>My Recent</h3>
+
+                <div id="recentsBlock">
+                ${
+                  this.latest.map((late) => {
+                    return html`
+                      <fast-card use-defaults>
+                        <img src="${URL.createObjectURL(late.preview)}">
+                        <h4>${late.name}</h4>
+
+                        <fast-button @click="${() => this.handleRecent(late.handle)}">
+                          Open
+                        </fast-button>
+                      </fast-card>
+                    `
+                  })
+                }
+                </div>
+              </div>
+              ` : null
+            }
           </div>
         ` : null
       }
