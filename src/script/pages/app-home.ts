@@ -22,7 +22,7 @@ export class AppHome extends LitElement {
   @property() imageOpened: boolean = false;
   @property() imageBlob: File | File[] | Blob | null = null;
   @property() originalBlob: File | File[] | Blob | null = null;
-  @property() latest: any[] | null = null;
+  @property() latest: any[] | null | undefined = null;
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
@@ -108,13 +108,14 @@ export class AppHome extends LitElement {
 
       @media(screen-spanning: single-fold-horizontal) {
         #toolbar {
-          height: calc(env(fold-top) - 23px);
-          display: flex;
+          display: flex !important;
           flex-direction: column;
           justify-content: flex-start;
+
+          height: 50%;
         }
 
-        #toolbar button {
+        #toolbar fast-button {
           margin-bottom: 10px;
         }
       }
@@ -137,6 +138,7 @@ export class AppHome extends LitElement {
 
         #latestBlock fast-card {
           margin-right: 1em;
+          max-width: 22em;
         }
 
         #latestBlock fast-card img {
@@ -177,15 +179,16 @@ export class AppHome extends LitElement {
 
       @media(screen-spanning: single-fold-vertical) {
         #welcome {
-          position: absolute;
-          justify-content: center;
 
           display: flex;
           flex-direction: row;
           right: initial;
-          align-items: flex-start;
           margin: 0;
           margin-top: 1em;
+
+          justify-content: center;
+          align-items: center;
+          width: 50%;
         }
 
         #welcome #latestBlock {
@@ -209,6 +212,8 @@ export class AppHome extends LitElement {
           display: flex;
           flex-direction: column;
           justify-content: flex-start;
+
+          width: 47%;
 
           overflow: initial;
           white-space: initial;
@@ -244,33 +249,7 @@ export class AppHome extends LitElement {
 
     this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
 
-    if ((window as any).getWindowSegments) {
-      const screenSegments = (window as any).getWindowSegments();
-      if (screenSegments.length > 1) {
-        // now we know the device is a foldable
-        // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
-        // and we can update CSS classes in our layout as appropriate 
-
-        // other changes as required for layout
-
-        if (screenSegments[0].width === screenSegments[1].width) {
-          this.mainCanvas.height = screenSegments[0].height - 60;
-          this.mainCanvas.width = screenSegments[0].width + 1;
-        }
-        else {
-          this.mainCanvas.height = window.innerHeight - 60;
-          this.mainCanvas.width = screenSegments[0].width + 1;
-        }
-      }
-      else {
-        this.mainCanvas.height = window.innerHeight - 60;
-        this.mainCanvas.width = window.innerWidth;
-      }
-    }
-    else {
-      this.mainCanvas.height = window.innerHeight - 60;
-      this.mainCanvas.width = window.innerWidth;
-    }
+    this.resizeCanvas();
 
     if (this.mainCanvas) {
       this.mainCanvasContext = (this.mainCanvas.getContext('2d') as CanvasRenderingContext2D);
@@ -286,7 +265,47 @@ export class AppHome extends LitElement {
       
     };
 
+    window.onresize = () => {
+      this.resizeCanvas();
+
+      if (this.imageBlob) {
+        this.handleSharedImage((this.imageBlob as Blob));
+      }
+    }
+
     this.latest = await this.getLatest();
+  }
+
+  resizeCanvas() {
+    if (this.mainCanvas) {
+      if ((window as any).getWindowSegments) {
+        const screenSegments = (window as any).getWindowSegments();
+        if (screenSegments.length > 1) {
+          // now we know the device is a foldable
+          // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
+          // and we can update CSS classes in our layout as appropriate 
+  
+          // other changes as required for layout
+  
+          if (screenSegments[0].width === screenSegments[1].width) {
+            this.mainCanvas.height = screenSegments[0].height - 60;
+            this.mainCanvas.width = screenSegments[0].width + 1;
+          }
+          else {
+            this.mainCanvas.height = window.innerHeight - 60;
+            this.mainCanvas.width = screenSegments[0].width + 1;
+          }
+        }
+        else {
+          this.mainCanvas.height = window.innerHeight - 60;
+          this.mainCanvas.width = window.innerWidth;
+        }
+      }
+      else {
+        this.mainCanvas.height = window.innerHeight - 60;
+        this.mainCanvas.width = window.innerWidth;
+      }
+    }
   }
 
   handleSharedImage(blob: Blob) {
@@ -357,44 +376,49 @@ export class AppHome extends LitElement {
   async saveLatest(handle: FileSystemHandle) {
    const latest: Array<any> = await get('savedImages');
 
-   if (latest && latest.length > 2) {
-     await clear();
-
-     const newImage = [{
-      name: handle.name,
+   if (handle) {
+    if (latest && latest.length > 2) {
+      await clear();
+ 
+      const newImage = [{
+       name: handle.name || "simpleedit",
+       handle: handle,
+       preview: this.originalBlob
+     }];
+ 
+      await set('savedImages',
+       newImage
+      );
+ 
+      return newImage;
+    }
+    else if (latest && latest.length > 0) {
+     const newImage = [...latest, {
+      name: handle.name || "simpleedit",
       handle: handle,
       preview: this.originalBlob
     }];
-
-     await set('savedImages',
-      newImage
-     );
-
+    
+     await set('savedImages', newImage)
+ 
      return newImage;
    }
-   else if (latest && latest.length > 0) {
-    const newImage = [...latest, {
-     name: handle.name,
-     handle: handle,
-     preview: this.originalBlob
-   }];
-   
-    await set('savedImages', newImage)
-
-    return newImage;
-  }
+    else {
+      const newImage = [{
+       name: handle.name || "simpleedit",
+       handle: handle,
+       preview: this.originalBlob
+     }];
+ 
+      await set('savedImages',
+       newImage
+      );
+ 
+      return newImage;
+    }
+   }
    else {
-     const newImage = [{
-      name: handle.name,
-      handle: handle,
-      preview: this.originalBlob
-    }];
-
-     await set('savedImages',
-      newImage
-     );
-
-     return newImage;
+     return;
    }
   }
 
