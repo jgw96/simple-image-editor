@@ -33,6 +33,10 @@ export class AppHome extends LitElement {
   static get styles() {
     return css`
 
+      #bitmap {
+        display: none;
+      }
+
       #latestBlock h3 {
         text-align: initial;
       }
@@ -106,20 +110,6 @@ export class AppHome extends LitElement {
         padding-right: 6px;
       }
 
-      @media(screen-spanning: single-fold-horizontal) {
-        #toolbar {
-          display: flex !important;
-          flex-direction: column;
-          justify-content: flex-start;
-
-          height: 50%;
-        }
-
-        #toolbar fast-button {
-          margin-bottom: 10px;
-        }
-      }
-
       @media(min-width: 1200px) {
         #toolbar {
           top: 3.5em;
@@ -129,7 +119,7 @@ export class AppHome extends LitElement {
 
         #recentsBlock {
           display: flex;
-          justify-content: space-between;
+          justify-content: flex-start;
         }
 
         #latestBlock {
@@ -174,6 +164,20 @@ export class AppHome extends LitElement {
           position: absolute;
           top: 5em;
           right: 169px;
+        }
+      }
+
+      @media(screen-spanning: single-fold-horizontal) {
+        #toolbar {
+          display: flex !important;
+          flex-direction: column;
+          justify-content: flex-start;
+
+          height: 50%;
+        }
+
+        #toolbar fast-button {
+          margin-bottom: 10px;
         }
       }
 
@@ -334,7 +338,7 @@ export class AppHome extends LitElement {
 
     this.originalBlob = blob;
 
-    this.imageBlob = this.originalBlob;
+    this.imageBlob = blob;
   }
 
   async handleRecent(handle: any) {
@@ -486,6 +490,65 @@ export class AppHome extends LitElement {
     });
   }
 
+  async technicolor() {
+    this.applyWebglFilter("technicolor");
+  }
+
+  async polaroid() {
+    this.applyWebglFilter("polaroid");
+  }
+
+  async sepia() {
+    this.applyWebglFilter("sepia");
+  }
+
+  writeCanvas(blob: Blob) {
+    this.img = new Image();
+
+    this.img.onload = () => {
+      if (this.mainCanvas) {
+
+        // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
+        const hRatio = this.mainCanvas.width / this.img.naturalWidth;
+        const vRatio = this.mainCanvas.height / this.img.naturalHeight;
+        const ratio = Math.min(hRatio, vRatio);
+        const centerShift_x = (this.mainCanvas.width - this.img.naturalWidth * ratio) / 2;
+        const centerShift_y = (this.mainCanvas.height - this.img.naturalHeight * ratio) / 2;
+
+        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
+
+        this.mainCanvasContext?.drawImage(this.img, 0, 0, this.img.naturalWidth, this.img.naturalHeight,
+          centerShift_x, centerShift_y, this.img.width * ratio, this.img.height * ratio);
+
+        this.imageOpened = true;
+      }
+    }
+
+    this.img.src = URL.createObjectURL(blob);
+  }
+
+  async applyWebglFilter(type: string) {
+    const bitmapCanvas: HTMLCanvasElement | null| undefined = this.shadowRoot?.querySelector("#bitmap");
+    const bitmapContext = bitmapCanvas?.getContext("bitmaprenderer");
+
+    try {
+      const bitmapToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.img), this.img?.width || 0, this.img?.height || 0);
+      bitmapContext?.transferFromImageBitmap(bitmapToDraw);
+
+      bitmapCanvas?.toBlob((blob: Blob | null) => {
+        if (blob) {
+          // this.handleSharedImage(blob);
+          this.writeCanvas(blob);
+        }
+      })
+
+      // filter.reset();
+    }
+    catch( err ) { 
+      console.error(err);
+    }
+  }
+
   async enhance() {
     const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
 
@@ -566,7 +629,7 @@ export class AppHome extends LitElement {
 
         this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
 
-        this.handleSharedImage(blob);
+        this.writeCanvas(blob);
       };
 
 
@@ -666,6 +729,21 @@ export class AppHome extends LitElement {
           <ion-icon name="bulb-outline"></ion-icon>
         </fast-button>
 
+        <fast-button @click="${() => this.sepia()}">
+          sepia
+          <ion-icon name="bulb-outline"></ion-icon>
+        </fast-button>
+
+        <fast-button @click="${() => this.technicolor()}">
+          technicolor
+          <ion-icon name="bulb-outline"></ion-icon>
+        </fast-button>
+
+        <fast-button @click="${() => this.polaroid()}">
+          polaroid
+          <ion-icon name="bulb-outline"></ion-icon>
+        </fast-button>
+
         <fast-button @click="${() => this.rotate()}">
           rotate
           <ion-icon name="disc-outline"></ion-icon>
@@ -746,6 +824,7 @@ export class AppHome extends LitElement {
 
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
         <canvas id="onScreenCanvas"></canvas>
+        <canvas id="bitmap"></canvas>
       </drag-drop>
 
       <pwa-install>Install SimpleEdit</pwa-install>

@@ -16,3 +16,9 @@ html, body {
   overflow-x: hidden;
   background: #181818;
 }
+
+@media(min-width: 1200px) {
+  html, body {
+    overflow-y: hidden;
+  }
+}

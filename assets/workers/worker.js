@@ -1,5 +1,6 @@
 // @ts-ignore
 importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");
+importScripts("/assets/filters/webgl.js");
 // importScripts("../../../dist/umd/comlink.js");
 
 const obj = {
@@ -8,7 +9,7 @@ const obj = {
     this.counter++;
   },
 
-  blackAndWhite(d, width, height ) {
+  blackAndWhite(d, width, height) {
     for (var i = 0; i < d.length; i += 4) {
       let r = d[i];
       let g = d[i + 1];
@@ -24,7 +25,7 @@ const obj = {
     return image;
   },
 
-  invert(d, width, height ) {
+  invert(d, width, height) {
     for (var i = 0; i < d.length; i += 4) {
       var r = d[i];
       var g = d[i + 1];
@@ -38,7 +39,7 @@ const obj = {
     return image;
   },
 
-  enhance(d, width, height ) {
+  enhance(d, width, height) {
     const adjustment = 40;
 
     for (var i = 0; i < d.length; i += 4) {
@@ -52,20 +53,20 @@ const obj = {
     return image;
   },
 
-  saturate(d, width, height ) {
+  saturate(d, width, height) {
     const amount = 2;
 
     for (let i = 0; i < d.length; i += 4) {
       let r = (.213 + .787 * amount) * d[i]
-          + (.715 - .715 * amount) * d[i + 1]
-          + (.072 - .072 * amount) * d[i + 2];
+        + (.715 - .715 * amount) * d[i + 1]
+        + (.072 - .072 * amount) * d[i + 2];
       let g = (.213 - .213 * amount) * d[i]
-          + (.715 + .285 * amount) * d[i + 1]
-          + (.072 - .072 * amount) * d[i + 2];
+        + (.715 + .285 * amount) * d[i + 1]
+        + (.072 - .072 * amount) * d[i + 2];
       let b = (.213 - .213 * amount) * d[i];
-          + (.715 - .715 * amount) * d[i + 1]
-          + (.072 + .928 * amount) * d[i + 2];
-      
+      + (.715 - .715 * amount) * d[i + 1]
+        + (.072 + .928 * amount) * d[i + 2];
+
       d[i] = r;
       d[i + 1] = g;
       d[i + 2] = b;
@@ -76,19 +77,39 @@ const obj = {
     return image;
   },
 
+  async doWebGL(type, canvasImage, width, height) {
+    const filter = new WebGLImageFilter();
+    console.log(canvasImage, width, height);
+
+    filter.addFilter(type);
+
+    const offscreen2 = new OffscreenCanvas(width, height);
+    offscreenContext = offscreen2.getContext("2d");
+
+    offscreenContext.drawImage(canvasImage, 0, 0, width, height);
+
+    const filtered = filter.apply(offscreen2);
+
+    const bitmapToDraw = filtered.transferToImageBitmap();
+
+    filter.reset();
+
+    return bitmapToDraw;
+  },
+
   async doAI(canvasImage) {
     const splitData = canvasImage.split(',')[1];
-  
+
     const bytes = self.atob(splitData);
     const buf = new ArrayBuffer(bytes.length);
     let byteArr = new Uint8Array(buf);
-  
+
     for (var i = 0; i < bytes.length; i++) {
       byteArr[i] = bytes.charCodeAt(i);
     }
-  
+
     let data = null;
-  
+
     try {
       const response = await fetch(`https://westus2.api.cognitive.microsoft.com/vision/v3.0/generateThumbnail?width=400&height=450&smartCropping=true`, {
         headers: {
@@ -99,9 +120,9 @@ const obj = {
         body: byteArr
       });
       data = await response.blob();
-  
+
       return data;
-  
+
     } catch (error) {
       console.error(error);
       return error;
