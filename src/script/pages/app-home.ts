@@ -92,6 +92,7 @@ export class AppHome extends LitElement {
       #fileInfo {
         color: white;
         margin: 10px;
+        margin-bottom: 0;
       }
 
       canvas {
@@ -104,10 +105,10 @@ export class AppHome extends LitElement {
         right: 0;
         color: white;
         width: 100%;
-        display: flex;
         justify-content: flex-end;
         padding: 10px;
         padding-right: 6px;
+        display: none;
       }
 
       @media(min-width: 1200px) {
@@ -179,9 +180,30 @@ export class AppHome extends LitElement {
         #toolbar fast-button {
           margin-bottom: 10px;
         }
+
+        #dualExtras {
+          display: flex;
+        }
+
+        #toolbarActions {
+          display: flex;
+          flex-direction: column;
+          overflow: scroll;
+          max-height: 22.2em;
+        }
+
+        .headerSaveButton {
+          display: none;
+        }
       }
 
       @media(screen-spanning: single-fold-vertical) {
+
+        #toolbarActions {
+          display: flex;
+          flex-direction: column;
+        }
+
         #welcome {
 
           display: flex;
@@ -225,6 +247,14 @@ export class AppHome extends LitElement {
 
         #toolbar fast-button {
           margin-bottom: 10px;
+        }
+
+        #dualExtras {
+          display: flex;
+        }
+
+        .headerSaveButton {
+          display: none;
         }
       }
 
@@ -275,6 +305,7 @@ export class AppHome extends LitElement {
       if (this.imageBlob) {
         this.handleSharedImage((this.imageBlob as Blob));
       }
+      
     }
 
     this.latest = await this.getLatest();
@@ -685,7 +716,7 @@ export class AppHome extends LitElement {
           <ion-icon name="refresh-outline"></ion-icon>
         </fast-button>` : null}
     
-      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="saveButton" @click="${() => this.saveImage()}">
+      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="saveButton" class="headerSaveButton" @click="${() => this.saveImage()}">
         Save Copy
         <ion-icon name="save-outline"></ion-icon>
       </fast-button>` : null}
@@ -701,56 +732,57 @@ export class AppHome extends LitElement {
     
       ${this.imageOpened ? html`
       <div id="toolbar">
-        ${this.checkDual() === true ? html`<div id="fileInfo">
+        <div id="fileInfo">
           <h3>
             ${this.imageBlob ? (this.imageBlob as File).name : "No File Name"}
           </h3>
     
           <p>Size: ${this.imageBlob ? this.formatBytes((this.imageBlob as File).size) : null}</p>
-        </div>` : null}
-    
-        <fast-button @click="${() => this.invert()}">
-          invert
-          <ion-icon name="partly-sunny-outline"></ion-icon>
-        </fast-button>
-    
-        <fast-button @click="${() => this.blackAndWhite()}">
-          grayscale
-          <ion-icon name="contrast-outline"></ion-icon>
-        </fast-button>
-    
-        <fast-button @click="${() => this.enhance()}">
-          brighten
-          <ion-icon name="sunny-outline"></ion-icon>
-        </fast-button>
+        </div>
 
-        <fast-button @click="${() => this.saturate()}">
-          saturate
-          <ion-icon name="bulb-outline"></ion-icon>
-        </fast-button>
+        <div id="toolbarActions">
+          <fast-button @click="${() => this.invert()}">
+            invert
+            <ion-icon name="partly-sunny-outline"></ion-icon>
+          </fast-button>
+      
+          <fast-button @click="${() => this.blackAndWhite()}">
+            grayscale
+            <ion-icon name="contrast-outline"></ion-icon>
+          </fast-button>
+      
+          <fast-button @click="${() => this.enhance()}">
+            brighten
+            <ion-icon name="sunny-outline"></ion-icon>
+          </fast-button>
 
-        <fast-button @click="${() => this.sepia()}">
-          sepia
-          <ion-icon name="bulb-outline"></ion-icon>
-        </fast-button>
+          <fast-button @click="${() => this.saturate()}">
+            saturate
+            <ion-icon name="bulb-outline"></ion-icon>
+          </fast-button>
 
-        <fast-button @click="${() => this.technicolor()}">
-          technicolor
-          <ion-icon name="bulb-outline"></ion-icon>
-        </fast-button>
+          <fast-button @click="${() => this.sepia()}">
+            sepia
+            <ion-icon name="bulb-outline"></ion-icon>
+          </fast-button>
 
-        <fast-button @click="${() => this.polaroid()}">
-          polaroid
-          <ion-icon name="bulb-outline"></ion-icon>
-        </fast-button>
+          <fast-button @click="${() => this.technicolor()}">
+            technicolor
+            <ion-icon name="bulb-outline"></ion-icon>
+          </fast-button>
 
-        <fast-button @click="${() => this.rotate()}">
-          rotate
-          <ion-icon name="disc-outline"></ion-icon>
-        </fast-button>
+          <fast-button @click="${() => this.polaroid()}">
+            polaroid
+            <ion-icon name="bulb-outline"></ion-icon>
+          </fast-button>
 
-        ${
-          this.checkDual() === true ? html`
+          <fast-button @click="${() => this.rotate()}">
+            rotate
+            <ion-icon name="disc-outline"></ion-icon>
+          </fast-button>
+        </div>
+
+
             <div id="dualExtras">
 
               <fast-button @click="${() => this.shareImage()}">
@@ -772,15 +804,17 @@ export class AppHome extends LitElement {
                 Save Copy
                 <ion-icon name="save-outline"></ion-icon>
               </fast-button>
+
+              
               
             </div>
-          ` : null
-        }
       </div>
       ` : null}
 
+
       ${
         !this.imageOpened ? html`
+        <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
           <div id="welcome">
 
             <div id="welcomeIntro">
@@ -819,8 +853,8 @@ export class AppHome extends LitElement {
               ` : null
             }
           </div>
-        ` : null
-      }
+        </drag-drop>
+          ` : null}
 
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
         <canvas id="onScreenCanvas"></canvas>
@@ -829,6 +863,6 @@ export class AppHome extends LitElement {
 
       <pwa-install>Install SimpleEdit</pwa-install>
     </div>
-    `;
+  `
   }
 }
