@@ -192,7 +192,7 @@ export class AppHome extends LitElement {
           max-height: 22.2em;
         }
 
-        .headerSaveButton {
+        .headerSaveButton, .headerAction {
           display: none;
         }
       }
@@ -701,17 +701,17 @@ export class AppHome extends LitElement {
     return html`
     <app-header>
 
-    ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="shareButton" @click="${() => this.shareImage()}">
+    ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="shareButton" @click="${() => this.shareImage()}">
         Share
         <ion-icon name="share-outline"></ion-icon>
       </fast-button>` : null}
 
-      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="cropButton" @click="${() => this.crop()}">
+      ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="cropButton" @click="${() => this.crop()}">
           Auto Thumbnail
           <ion-icon name="crop-outline"></ion-icon>
         </fast-button>` : null }
 
-      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="revertButton" @click="${() => this.revert()}">
+      ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="revertButton" @click="${() => this.revert()}">
           revert
           <ion-icon name="refresh-outline"></ion-icon>
         </fast-button>` : null}
