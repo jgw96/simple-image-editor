@@ -5,6 +5,9 @@ importScripts("/assets/filters/webgl.js");
 
 const obj = {
   counter: 0,
+  offscreen: new OffscreenCanvas(40, 40),
+  filter: new WebGLImageFilter(),
+
   inc() {
     this.counter++;
   },
@@ -78,23 +81,22 @@ const obj = {
   },
 
   async doWebGL(type, canvasImage, width, height) {
-    const filter = new WebGLImageFilter();
-    console.log(canvasImage, width, height);
+    this.filter.addFilter(type);
 
-    filter.addFilter(type);
+    this.offscreen.width = width;
+    this.offscreen.height = height;
 
-    const offscreen2 = new OffscreenCanvas(width, height);
-    offscreenContext = offscreen2.getContext("2d");
+    offscreenContext = this.offscreen.getContext("2d");
 
     offscreenContext.drawImage(canvasImage, 0, 0, width, height);
 
-    const filtered = filter.apply(offscreen2);
+    const filtered = this.filter.apply(this.offscreen);
 
-    const bitmapToDraw = filtered.transferToImageBitmap();
+    const blobToDraw = filtered.convertToBlob();
 
-    filter.reset();
+    this.filter.reset();
 
-    return bitmapToDraw;
+    return blobToDraw;
   },
 
   async doAI(canvasImage) {

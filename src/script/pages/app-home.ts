@@ -33,10 +33,6 @@ export class AppHome extends LitElement {
   static get styles() {
     return css`
 
-      #bitmap {
-        display: none;
-      }
-
       #latestBlock h3 {
         text-align: initial;
       }
@@ -559,21 +555,9 @@ export class AppHome extends LitElement {
   }
 
   async applyWebglFilter(type: string) {
-    const bitmapCanvas: HTMLCanvasElement | null| undefined = this.shadowRoot?.querySelector("#bitmap");
-    const bitmapContext = bitmapCanvas?.getContext("bitmaprenderer");
-
     try {
-      const bitmapToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.img), this.img?.width || 0, this.img?.height || 0);
-      bitmapContext?.transferFromImageBitmap(bitmapToDraw);
-
-      bitmapCanvas?.toBlob((blob: Blob | null) => {
-        if (blob) {
-          // this.handleSharedImage(blob);
-          this.writeCanvas(blob);
-        }
-      })
-
-      // filter.reset();
+      const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.img), this.img?.width || 0, this.img?.height || 0);
+      this.writeCanvas(blobToDraw);
     }
     catch( err ) { 
       console.error(err);
@@ -858,7 +842,6 @@ export class AppHome extends LitElement {
 
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
         <canvas id="onScreenCanvas"></canvas>
-        <canvas id="bitmap"></canvas>
       </drag-drop>
 
       <pwa-install>Install SimpleEdit</pwa-install>
