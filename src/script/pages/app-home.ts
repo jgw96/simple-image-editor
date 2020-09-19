@@ -24,7 +24,8 @@ export class AppHome extends LitElement {
   @property() originalBlob: File | File[] | Blob | null = null;
   @property() latest: any[] | null | undefined = null;
 
-  mainCanvas: HTMLCanvasElement | undefined;
+  // mainCanvas: HTMLCanvasElement | undefined;
+  mainImg: HTMLImageElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
 
   worker: any;
@@ -89,10 +90,12 @@ export class AppHome extends LitElement {
         color: white;
         margin: 10px;
         margin-bottom: 0;
+
+        display: none;
       }
 
-      canvas {
-        background: #181818;
+      img {
+        width: 100%;
       }
 
       #dualExtras {
@@ -188,6 +191,10 @@ export class AppHome extends LitElement {
           max-height: 22.2em;
         }
 
+        #fileInfo {
+          display: initial;
+        }
+
         .headerSaveButton, .headerAction {
           display: none;
         }
@@ -195,9 +202,17 @@ export class AppHome extends LitElement {
 
       @media(screen-spanning: single-fold-vertical) {
 
+        #mainImage {
+          width: 50%;
+        }
+
         #toolbarActions {
           display: flex;
           flex-direction: column;
+        }
+
+        #fileInfo {
+          display: initial;
         }
 
         #welcome {
@@ -277,13 +292,7 @@ export class AppHome extends LitElement {
   async firstUpdated() {
     this.init();
 
-    this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
-
-    this.resizeCanvas();
-
-    if (this.mainCanvas) {
-      this.mainCanvasContext = (this.mainCanvas.getContext('2d') as CanvasRenderingContext2D);
-    }
+    this.mainImg = (this.shadowRoot?.querySelector("img") as HTMLImageElement);
 
     navigator.serviceWorker.onmessage = (event) => {
       console.log(event);
@@ -296,76 +305,24 @@ export class AppHome extends LitElement {
     };
 
     window.onresize = () => {
-      this.resizeCanvas();
-
       if (this.imageBlob) {
         this.handleSharedImage((this.imageBlob as Blob));
-      }
-      
+      } 
     }
 
     this.latest = await this.getLatest();
   }
 
-  resizeCanvas() {
-    if (this.mainCanvas) {
-      if ((window as any).getWindowSegments) {
-        const screenSegments = (window as any).getWindowSegments();
-        if (screenSegments.length > 1) {
-          // now we know the device is a foldable
-          // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
-          // and we can update CSS classes in our layout as appropriate 
-  
-          // other changes as required for layout
-  
-          if (screenSegments[0].width === screenSegments[1].width) {
-            this.mainCanvas.height = screenSegments[0].height - 60;
-            this.mainCanvas.width = screenSegments[0].width + 1;
-          }
-          else {
-            this.mainCanvas.height = window.innerHeight - 60;
-            this.mainCanvas.width = screenSegments[0].width + 1;
-          }
-        }
-        else {
-          this.mainCanvas.height = window.innerHeight - 60;
-          this.mainCanvas.width = window.innerWidth;
-        }
-      }
-      else {
-        this.mainCanvas.height = window.innerHeight - 60;
-        this.mainCanvas.width = window.innerWidth;
-      }
-    }
-  }
-
   handleSharedImage(blob: Blob) {
-    this.img = new Image();
+    if (this.mainImg) {
+      this.mainImg.src = URL.createObjectURL(blob);
 
-    this.img.onload = () => {
-      if (this.mainCanvas) {
+      this.originalBlob = blob;
+  
+      this.imageBlob = blob;
 
-        // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
-        const hRatio = this.mainCanvas.width / this.img.naturalWidth;
-        const vRatio = this.mainCanvas.height / this.img.naturalHeight;
-        const ratio = Math.min(hRatio, vRatio);
-        const centerShift_x = (this.mainCanvas.width - this.img.naturalWidth * ratio) / 2;
-        const centerShift_y = (this.mainCanvas.height - this.img.naturalHeight * ratio) / 2;
-
-        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-
-        this.mainCanvasContext?.drawImage(this.img, 0, 0, this.img.naturalWidth, this.img.naturalHeight,
-          centerShift_x, centerShift_y, this.img.width * ratio, this.img.height * ratio);
-
-        this.imageOpened = true;
-      }
+      this.imageOpened = true;
     }
-
-    this.img.src = URL.createObjectURL(blob);
-
-    this.originalBlob = blob;
-
-    this.imageBlob = blob;
   }
 
   async handleRecent(handle: any) {
@@ -462,43 +419,30 @@ export class AppHome extends LitElement {
 
     this.imageBlob = this.originalBlob;
 
-    this.img = new Image();
+    if (this.mainImg) {
+      this.mainImg.src = window.URL.createObjectURL(this.imageBlob);
 
-    this.img.onload = () => {
-      if (this.mainCanvas) {
-
-        // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
-        const hRatio = this.mainCanvas.width / this.img.naturalWidth;
-        const vRatio = this.mainCanvas.height / this.img.naturalHeight;
-        const ratio = Math.min(hRatio, vRatio);
-        const centerShift_x = (this.mainCanvas.width - this.img.naturalWidth * ratio) / 2;
-        const centerShift_y = (this.mainCanvas.height - this.img.naturalHeight * ratio) / 2;
-
-        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-
-        this.mainCanvasContext?.drawImage(this.img, 0, 0, this.img.naturalWidth, this.img.naturalHeight,
-          centerShift_x, centerShift_y, this.img.width * ratio, this.img.height * ratio);
-
-        this.imageOpened = true;
-      }
+      this.imageOpened = true;
     }
-
-    this.img.src = URL.createObjectURL(this.imageBlob);
   }
 
   async saveImage() {
-    this.mainCanvas?.toBlob(async (blob) => {
+    if (this.mainImg) {
+      const blob = await this.worker.getBlob(await window.createImageBitmap(this.mainImg), this.mainImg.naturalWidth, this.mainImg.naturalHeight);
+
       if (blob) {
         await fileSave(blob, {
           fileName: 'Untitled.png',
           extensions: ['.png'],
         });
       }
-    });
+    }
   }
 
-  shareImage() {
-    this.mainCanvas?.toBlob(async (blob) => {
+  async shareImage() {
+    if (this.mainImg) {
+      const blob = await this.worker.getBlob(await window.createImageBitmap(this.mainImg), this.mainImg.naturalWidth, this.mainImg.naturalHeight);
+
       if (blob) {
         const file = new File([blob], "untitled.png", {
           type: "image/png"
@@ -514,7 +458,8 @@ export class AppHome extends LitElement {
           console.log(`Your system doesn't support sharing files.`);
         }
       }
-    });
+    }
+
   }
 
   async technicolor() {
@@ -530,101 +475,37 @@ export class AppHome extends LitElement {
   }
 
   writeCanvas(blob: Blob) {
-    this.img = new Image();
-
-    this.img.onload = () => {
-      if (this.mainCanvas) {
-
-        // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
-        const hRatio = this.mainCanvas.width / this.img.naturalWidth;
-        const vRatio = this.mainCanvas.height / this.img.naturalHeight;
-        const ratio = Math.min(hRatio, vRatio);
-        const centerShift_x = (this.mainCanvas.width - this.img.naturalWidth * ratio) / 2;
-        const centerShift_y = (this.mainCanvas.height - this.img.naturalHeight * ratio) / 2;
-
-        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-
-        this.mainCanvasContext?.drawImage(this.img, 0, 0, this.img.naturalWidth, this.img.naturalHeight,
-          centerShift_x, centerShift_y, this.img.width * ratio, this.img.height * ratio);
-
-        this.imageOpened = true;
-      }
+    if (this.mainImg) {
+      this.mainImg.src = URL.createObjectURL(blob);
     }
-
-    this.img.src = URL.createObjectURL(blob);
   }
 
-  async applyWebglFilter(type: string) {
-    try {
-      const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.img), this.img?.width || 0, this.img?.height || 0);
-      this.writeCanvas(blobToDraw);
-    }
-    catch( err ) { 
-      console.error(err);
+  async applyWebglFilter(type: string, amount?: number) {
+    if (this.mainImg) {
+      try {
+        const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.mainImg), this.mainImg.width || 0, this.mainImg.height || 0, amount || null);
+        this.writeCanvas(blobToDraw);
+      }
+      catch( err ) { 
+        console.error(err);
+      }
     }
   }
 
   async enhance() {
-    const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-
-    if (data) {
-      const d = data.data;
-
-      const data2 = await this.worker.enhance(d, data.width, data.height);
-
-      this.mainCanvasContext?.putImageData(data2, 0, 0);
-    }
+    this.applyWebglFilter("brightness", 1);
   }
 
   async blackAndWhite() {
-    const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-
-    if (data) {
-      const d = data.data;
-
-      const data2 = await this.worker.blackAndWhite(d, data.width, data.height);
-
-      this.mainCanvasContext?.putImageData(data2, 0, 0);
-    }
+    this.applyWebglFilter("desaturateLuminance");
   }
 
   async invert() {
-    const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-
-    if (data) {
-      const d = data.data;
-
-      const data2 = await this.worker.invert(d, data.width, data.height)
-
-      this.mainCanvasContext?.putImageData(data2, 0, 0);
-    }
+    this.applyWebglFilter("negative");
   }
 
   async saturate() {
-// https://github.com/klouskingsley/imagedata-filters/blob/master/src/filters/saturate.js
-    const data = this.mainCanvasContext?.getImageData(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-
-
-    if (data) {
-      const d = data.data;
-      const data2 = await this.worker.saturate(d, data.width, data.height);
-
-      this.mainCanvasContext?.putImageData(data2, 0, 0);
-    }
-  
-  }
-
-  async crop() {
-    const canvasData = this.mainCanvas?.toDataURL();
-
-    const blob = await this.worker.doAI(canvasData);
-
-    if (blob) {
-      await fileSave(blob, {
-        fileName: 'Untitled.png',
-        extensions: ['.png'],
-      });
-    }
+    this.applyWebglFilter("saturation", 1);
   }
 
   async rotate() {
@@ -632,24 +513,12 @@ export class AppHome extends LitElement {
     // WebWorkers use `postMessage` and therefore work with Comlink.
     const rotateWorker = Comlink.wrap(underlying);
 
-    this.mainCanvas?.toBlob(async (blob1) => {
+    const bitmap = await window.createImageBitmap((this.mainImg as HTMLImageElement));
 
-      this.img = new Image();
+    const blob = await rotateWorker.rotateImageOffscreen(this.mainImg?.naturalWidth, this.mainImg?.naturalHeight, bitmap);
 
-      this.img.onload = async () => {
+    this.writeCanvas(blob);
 
-        const bitmap = await window.createImageBitmap(this.img);
-
-        const blob = await rotateWorker.rotateImageOffscreen(this.mainCanvas?.width, this.mainCanvas?.height, bitmap);
-
-        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
-
-        this.writeCanvas(blob);
-      };
-
-
-      this.img.src = URL.createObjectURL(blob1);
-    })
   }
 
   async revert() {
@@ -689,11 +558,6 @@ export class AppHome extends LitElement {
         Share
         <ion-icon name="share-outline"></ion-icon>
       </fast-button>` : null}
-
-      ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="cropButton" @click="${() => this.crop()}">
-          Auto Thumbnail
-          <ion-icon name="crop-outline"></ion-icon>
-        </fast-button>` : null }
 
       ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="revertButton" @click="${() => this.revert()}">
           revert
@@ -774,11 +638,6 @@ export class AppHome extends LitElement {
                 <ion-icon name="share-outline"></ion-icon>
               </fast-button>
 
-              <fast-button @click="${() => this.crop()}">
-                Auto Thumbnail
-                <ion-icon name="crop-outline"></ion-icon>
-              </fast-button>
-
               <fast-button @click="${() => this.revert()}">
                 Revert
                 <ion-icon name="refresh-outline"></ion-icon>
@@ -841,7 +700,7 @@ export class AppHome extends LitElement {
           ` : null}
 
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
-        <canvas id="onScreenCanvas"></canvas>
+        <img id="mainImage">
       </drag-drop>
 
       <pwa-install>Install SimpleEdit</pwa-install>
