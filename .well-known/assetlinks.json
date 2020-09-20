@@ -1,5 +1,5 @@
 [{
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target" : { "namespace": "android_app", "package_name": "net.azurestaticapps.thankful_tree_07da4921e.twa",
-                   "sha256_cert_fingerprints": ["9F:46:DE:06:3A:5D:0D:5F:2B:61:90:1C:57:7B:9F:2D:6B:11:B5:E9:64:DA:61:EA:40:36:A5:6B:82:7E:01:C8"] }
+                   "sha256_cert_fingerprints": ["9B:77:07:3E:6E:DB:EF:89:7D:10:9C:FC:6E:C4:D4:BB:D0:12:F6:79:BC:BE:53:1A:9E:0E:01:E3:6F:A0:AE:11"] }
     }]
