@@ -69,9 +69,9 @@
   "file_handlers": [
     {
       "action": "/",
-      "accept": [
-        "image/*"
-      ]
+      "accept": {
+        "image/*": ["*"]
+      }
     }
   ],
   "share_target": {
@@ -82,9 +82,9 @@
       "files": [
         {
           "name": "file",
-          "accept": [
-            "image/*"
-          ]
+          "accept": {
+            "image/*": ["*"]
+          }
         }
       ]
     }
