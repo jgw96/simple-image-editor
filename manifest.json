@@ -60,7 +60,7 @@
       "url": "/?q=edit",
       "icons": [
         {
-          "src": "assets/icon_256.png",
+          "src": "assets/icons/icon_256.png",
           "sizes": "256x256"
         }
       ]
@@ -70,7 +70,7 @@
     {
       "action": "/",
       "accept": {
-        "image/*": ["*"]
+        "image/*": [".png", ".jpg"]
       }
     }
   ],
@@ -82,9 +82,7 @@
       "files": [
         {
           "name": "file",
-          "accept": {
-            "image/*": ["*"]
-          }
+          "accept": [".png", ".jpg"]
         }
       ]
     }
