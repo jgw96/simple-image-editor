@@ -52,6 +52,15 @@
     "photo",
     "utilities"
   ],
+  "shortcuts": [
+    {
+      "name": "Edit an Image",
+      "short_name": "Start Editing",
+      "description": "Start editing an image",
+      "url": "/?q=edit",
+      "icons": [{ "src": "assets/icon_256.png", "sizes": "256x256" }]
+    }
+  ],
   "share_target": {
     "action": "/share/image/",
     "method": "POST",

@@ -301,8 +301,11 @@ export class AppHome extends LitElement {
       if (imageBlob) {
         this.handleSharedImage(imageBlob);
       }
-      
     };
+
+    if (location.search.includes("edit")) {
+      await this.openImage();
+    }
 
     window.onresize = () => {
       if (this.imageBlob) {
