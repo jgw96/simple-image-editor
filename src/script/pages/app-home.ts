@@ -23,6 +23,8 @@ export class AppHome extends LitElement {
   @property() imageBlob: File | File[] | Blob | null = null;
   @property() originalBlob: File | File[] | Blob | null = null;
   @property() latest: any[] | null | undefined = null;
+  @property() applying: boolean = false;
+  @property() handlingShortcut: boolean = false;
 
   // mainCanvas: HTMLCanvasElement | undefined;
   mainImg: HTMLImageElement | undefined;
@@ -33,6 +35,31 @@ export class AppHome extends LitElement {
 
   static get styles() {
     return css`
+
+      fast-dialog::part(positioning-region) {
+        z-index: 9999;
+        padding: 15%;
+        background: #181818ab;
+        backdrop-filter: blur(10px);
+      }
+
+      fast-dialog::part(control) {
+        padding-left: 12px;
+        padding-right: 12px;
+        
+        display: flex;
+        flex-direction: column;
+        height: fit-content;
+        padding-bottom: 2em;
+      }
+
+      fast-progress {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+      }
 
       #latestBlock h3 {
         text-align: initial;
@@ -133,6 +160,15 @@ export class AppHome extends LitElement {
 
         #latestBlock fast-card img {
           height: 300px;
+        }
+
+        fast-dialog::part(positioning-region) {
+          padding-left: 35%;
+          padding-right: 35%;
+        }
+
+        fast-dialog::part(control) {
+          padding-bottom: 3em;
         }
       }
 
@@ -306,7 +342,7 @@ export class AppHome extends LitElement {
     this.fileHandler();
 
     if (location.search.includes("edit")) {
-      await this.openImage();
+      this.handlingShortcut = true;
     }
 
     window.onresize = () => {
@@ -445,6 +481,10 @@ export class AppHome extends LitElement {
 
       this.imageOpened = true;
     }
+
+    if (this.handlingShortcut === true) {
+      this.handlingShortcut = false;
+    }
   }
 
   async saveImage() {
@@ -498,10 +538,14 @@ export class AppHome extends LitElement {
   writeCanvas(blob: Blob) {
     if (this.mainImg) {
       this.mainImg.src = URL.createObjectURL(blob);
+
+      this.imageBlob = blob;
     }
   }
 
   async applyWebglFilter(type: string, amount?: number) {
+    this.applying = true;
+
     if (this.mainImg) {
       try {
         const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.mainImg), this.mainImg.width || 0, this.mainImg.height || 0, amount || null);
@@ -511,6 +555,8 @@ export class AppHome extends LitElement {
         console.error(err);
       }
     }
+
+    this.applying = false;
   }
 
   async enhance() {
@@ -598,8 +644,22 @@ export class AppHome extends LitElement {
     </app-header>
     
     <div>
+
+    <fast-dialog id="example1" aria-label="Simple modal dialog" modal="true" ?hidden="${!this.handlingShortcut}">
+      <h2>Choose an Image</h2>
+
+      <p>Choose an image to start editing.</p>
+
+      <fast-button id="openButton" @click="${() => this.openImage()}">
+        Open Image
+        <ion-icon name="image-outline"></ion-icon>
+      </fast-button>
+    </fast-dialog>
     
       ${this.imageOpened ? html`
+
+      ${this.applying ? html`<fast-progress min="0" max="100"></fast-progress>`: null}
+
       <div id="toolbar">
         <div id="fileInfo">
           <h3>
