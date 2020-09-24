@@ -303,6 +303,8 @@ export class AppHome extends LitElement {
       }
     };
 
+    this.fileHandler();
+
     if (location.search.includes("edit")) {
       await this.openImage();
     }
@@ -314,6 +316,22 @@ export class AppHome extends LitElement {
     }
 
     this.latest = await this.getLatest();
+  }
+
+  async fileHandler() {
+    if ('launchQueue' in window) {
+      (window as any).launchQueue.setConsumer(async (launchParams: any) => {
+        if (!launchParams.files.length) {
+          return;
+        }
+        
+    
+        const fileHandle = launchParams.files[0];
+        const blob = await fileHandle.getFile();
+        
+        this.handleSharedImage(blob);
+      });
+    }
   }
 
   handleSharedImage(blob: Blob) {

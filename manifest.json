@@ -58,7 +58,20 @@
       "short_name": "Start Editing",
       "description": "Start editing an image",
       "url": "/?q=edit",
-      "icons": [{ "src": "assets/icon_256.png", "sizes": "256x256" }]
+      "icons": [
+        {
+          "src": "assets/icon_256.png",
+          "sizes": "256x256"
+        }
+      ]
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": [
+        "image/*"
+      ]
     }
   ],
   "share_target": {
@@ -69,7 +82,9 @@
       "files": [
         {
           "name": "file",
-          "accept": ["image/*"]
+          "accept": [
+            "image/*"
+          ]
         }
       ]
     }
