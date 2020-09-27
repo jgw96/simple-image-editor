@@ -14,11 +14,28 @@ html, body {
   padding: 0;
   margin: 0;
   overflow-x: hidden;
-  background: #181818;
+  overflow-y: hidden;
 }
 
-@media(min-width: 1200px) {
+@media(prefers-color-scheme: light) {
+  :root {
+    --app-color-primary:#2b579a;
+    --app-color-secondary: white;
+  }
+
+  html,body {
+    background: #faf9f8;
+  }
+
+  fast-design-system-provider {
+    --background-color: #faf9f8;
+    --neutral-foreground-rest: var(--app-color-primary);
+    --neutral-fill-card-rest: white;
+  }
+}
+
+@media(prefers-color-scheme: dark) {
   html, body {
-    overflow-y: hidden;
+    background: #181818;;
   }
 }

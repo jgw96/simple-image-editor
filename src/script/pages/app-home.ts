@@ -81,13 +81,22 @@ export class AppHome extends LitElement {
       }
 
       #welcome {
-        color: white;
         display: flex;
         flex-direction: column;
         margin: 4em;
         align-items: center;
         text-align: center;
         font-weight: bold;
+      }
+
+      @media(max-width: 290px) {
+        #welcome {
+          margin: 1em;
+        }
+
+        app-header #openButton {
+          display: none;
+        }
       }
 
       #toolbar {
@@ -107,10 +116,58 @@ export class AppHome extends LitElement {
         margin-left: 6px;
       }
 
+      @media(prefers-color-scheme: light) {
+        fast-button::part(content) {
+          color: var(--app-color-primary);
+        }
+
+        #openButton, #revertButton, .headerSaveButton, fast-card fast-button {
+          background: var(--app-color-primary) !important;
+        }
+
+        #openButton::part(content), #revertButton::part(content), .headerSaveButton::part(content), fast-card fast-button::part(content) {
+          color: white;
+        }
+
+        app-header #openButton, #toolbar fast-button {
+          background: var(--app-color-secondary) !important;
+        }
+
+        app-header #openButton::part(content) {
+          color: var(--app-color-primary) !important;
+        }
+
+        fast-button#saveButton {
+          background-color: #c239b3 !important;
+        }
+
+        fast-button#saveButton::part(content) {
+          color: white;
+        }
+      }
+
+      @media(min-width: 1200px) {
+        app-header .headerSaveButton, app-header #revertButton, app-header #shareButton {
+          background: var(--app-color-secondary) !important;
+        }
+
+        app-header .headerSaveButton::part(content), app-header #revertButton::part(content), app-header #shareButton::part(content) {
+          color: var(--app-color-primary);
+        }
+      }
+
       pwa-install {
         position: absolute;
         bottom: 16px;
         right: 16px;
+      }
+
+      @media(max-width: 1200px) {
+        pwa-install {
+          top: 4.5em;
+          left: 6px;
+          bottom: initial;
+        }
       }
 
       #fileInfo {
@@ -181,7 +238,7 @@ export class AppHome extends LitElement {
         }
 
         #latestBlock {
-          margin-top: 2em;
+          display: none;
         }
 
         #shareButton {
@@ -193,7 +250,7 @@ export class AppHome extends LitElement {
         #revertButton {
           position: absolute;
           top: 5em;
-          right: 88px;
+          right: 116px;
         }
 
         #cropButton {
@@ -298,6 +355,7 @@ export class AppHome extends LitElement {
 
         #dualExtras {
           display: flex;
+          padding-right: 12px;
         }
 
         .headerSaveButton {
@@ -306,7 +364,7 @@ export class AppHome extends LitElement {
       }
 
       #openButton {
-        background: var(--app-color-secondary) !important;
+        background: var(--app-color-secondary);
       }
 
       #saveButton {
@@ -535,7 +593,7 @@ export class AppHome extends LitElement {
     this.applyWebglFilter("sepia");
   }
 
-  writeCanvas(blob: Blob) {
+  writeImage(blob: Blob) {
     if (this.mainImg) {
       this.mainImg.src = URL.createObjectURL(blob);
 
@@ -549,7 +607,7 @@ export class AppHome extends LitElement {
     if (this.mainImg) {
       try {
         const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.mainImg), this.mainImg.width || 0, this.mainImg.height || 0, amount || null);
-        this.writeCanvas(blobToDraw);
+        this.writeImage(blobToDraw);
       }
       catch( err ) { 
         console.error(err);
@@ -584,8 +642,21 @@ export class AppHome extends LitElement {
 
     const blob = await rotateWorker.rotateImageOffscreen(this.mainImg?.naturalWidth, this.mainImg?.naturalHeight, bitmap);
 
-    this.writeCanvas(blob);
+    this.writeImage(blob);
+  }
 
+  async smartCrop() {
+    this.applying = true;
+
+    if (this.mainImg) {
+      const blob = await this.worker.doAI(await window.createImageBitmap(this.mainImg), this.mainImg.naturalWidth, this.mainImg.naturalHeight);
+
+      if (blob) {
+        this.writeImage(blob);
+      }
+    }
+
+    this.applying = false;
   }
 
   async revert() {
@@ -624,6 +695,11 @@ export class AppHome extends LitElement {
     ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="shareButton" @click="${() => this.shareImage()}">
         Share
         <ion-icon name="share-outline"></ion-icon>
+      </fast-button>` : null}
+
+      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="shareButton" class="headerSaveButton" @click="${() => this.smartCrop()}">
+        Smart Crop
+        <ion-icon name="crop-outline"></ion-icon>
       </fast-button>` : null}
 
       ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="revertButton" @click="${() => this.revert()}">
@@ -717,6 +793,11 @@ export class AppHome extends LitElement {
               <fast-button @click="${() => this.shareImage()}">
                 Share
                 <ion-icon name="share-outline"></ion-icon>
+              </fast-button>
+
+              <fast-button @click="${() => this.smartCrop()}">
+                Smart Crop
+                <ion-icon name="crop-outline"></ion-icon>
               </fast-button>
 
               <fast-button @click="${() => this.revert()}">
