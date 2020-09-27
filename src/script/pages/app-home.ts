@@ -144,15 +144,15 @@ export class AppHome extends LitElement {
         fast-button#saveButton::part(content) {
           color: white;
         }
-      }
 
-      @media(min-width: 1200px) {
-        app-header .headerSaveButton, app-header #revertButton, app-header #shareButton {
-          background: var(--app-color-secondary) !important;
-        }
-
-        app-header .headerSaveButton::part(content), app-header #revertButton::part(content), app-header #shareButton::part(content) {
-          color: var(--app-color-primary);
+        @media(min-width: 1200px) {
+          app-header .headerSaveButton, app-header #revertButton, app-header #shareButton {
+            background: var(--app-color-secondary) !important;
+          }
+  
+          app-header .headerSaveButton::part(content), app-header #revertButton::part(content), app-header #shareButton::part(content) {
+            color: var(--app-color-primary);
+          }
         }
       }
 
