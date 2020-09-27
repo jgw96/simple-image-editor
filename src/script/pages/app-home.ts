@@ -597,7 +597,7 @@ export class AppHome extends LitElement {
     if (this.mainImg) {
       this.mainImg.src = URL.createObjectURL(blob);
 
-      this.imageBlob = blob;
+      // this.imageBlob = blob;
     }
   }
 
