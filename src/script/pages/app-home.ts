@@ -7,6 +7,7 @@ import { fileOpen, fileSave, FileSystemHandle } from 'browser-nativefs';
 import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
 
 import '../components/drag-drop';
+import 'pinch-zoom-element';
 
 
 // For more info on the @pwabuilder/pwainstall component click here https://github.com/pwa-builder/pwa-install
@@ -178,8 +179,20 @@ export class AppHome extends LitElement {
         display: none;
       }
 
-      img {
-        width: 100%;
+      #imageWrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-top: 4em;
+        height: 77vh;
+      }
+
+      #imageWrapper img {
+        transform: translate(var(--x), var(--y)) scale(var(--scale));
+        transform-origin: 0 0;
+        will-change: transform;
+        max-width: 100%;
       }
 
       #dualExtras {
@@ -258,6 +271,11 @@ export class AppHome extends LitElement {
           top: 5em;
           right: 169px;
         }
+
+        #imageWrapper img {
+          height: initial;
+          max-width: 100%;
+        }
       }
 
       @media(screen-spanning: single-fold-horizontal) {
@@ -295,7 +313,7 @@ export class AppHome extends LitElement {
 
       @media(screen-spanning: single-fold-vertical) {
 
-        #mainImage {
+        #imageWrapper {
           width: 50%;
         }
 
@@ -604,9 +622,9 @@ export class AppHome extends LitElement {
   async applyWebglFilter(type: string, amount?: number) {
     this.applying = true;
 
-    if (this.mainImg) {
+    if (this.mainImg && this.originalBlob) {
       try {
-        const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap(this.mainImg), this.mainImg.width || 0, this.mainImg.height || 0, amount || null);
+        const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap((this.originalBlob as Blob)), this.mainImg.width || 0, this.mainImg.height || 0, amount || null);
         this.writeImage(blobToDraw);
       }
       catch( err ) { 
@@ -862,7 +880,11 @@ export class AppHome extends LitElement {
           ` : null}
 
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
-        <img id="mainImage">
+        <div id="imageWrapper">
+          <pinch-zoom>
+            <img id="mainImage">
+          </pinch-zoom>
+        </div>
       </drag-drop>
 
       <pwa-install>Install SimpleEdit</pwa-install>
