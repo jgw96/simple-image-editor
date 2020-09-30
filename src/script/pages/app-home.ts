@@ -7,6 +7,7 @@ import { fileOpen, fileSave, FileSystemHandle } from 'browser-nativefs';
 import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
 
 import '../components/drag-drop';
+import '../components/camera';
 import 'pinch-zoom-element';
 
 
@@ -26,6 +27,7 @@ export class AppHome extends LitElement {
   @property() latest: any[] | null | undefined = null;
   @property() applying: boolean = false;
   @property() handlingShortcut: boolean = false;
+  @property() takingPhoto: boolean = false;
 
   // mainCanvas: HTMLCanvasElement | undefined;
   mainImg: HTMLImageElement | undefined;
@@ -185,7 +187,7 @@ export class AppHome extends LitElement {
         justify-content: center;
         overflow: hidden;
         margin-top: 4em;
-        height: 77vh;
+        height: 84vh;
       }
 
       #imageWrapper img {
@@ -264,6 +266,12 @@ export class AppHome extends LitElement {
           position: absolute;
           top: 5em;
           right: 116px;
+        }
+
+        #takePhotoButton {
+          position: absolute;
+          top: 5em;
+          right: 194px;
         }
 
         #cropButton {
@@ -455,6 +463,10 @@ export class AppHome extends LitElement {
       this.imageBlob = blob;
 
       this.imageOpened = true;
+
+      if (this.takingPhoto === true) {
+        this.takingPhoto = false;
+      }
     }
   }
 
@@ -706,6 +718,10 @@ export class AppHome extends LitElement {
     return false;
   }
 
+  takePhoto() {
+    this.takingPhoto = true;
+  }
+
   render() {
     return html`
     <app-header>
@@ -734,6 +750,11 @@ export class AppHome extends LitElement {
         Open Image
         <ion-icon name="image-outline"></ion-icon>
       </fast-button>
+
+      ${this.imageOpened ? html`<fast-button id="takePhotoButton" @click="${() => this.takePhoto()}">
+        Take Photo
+        <ion-icon name="camera-outline"></ion-icon>
+      </fast-button>` : null }
       
     </app-header>
     
@@ -749,6 +770,8 @@ export class AppHome extends LitElement {
         <ion-icon name="image-outline"></ion-icon>
       </fast-button>
     </fast-dialog>
+
+    ${this.takingPhoto ? html`<app-camera @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}"></app-camera>` : null }
     
       ${this.imageOpened ? html`
 
