@@ -119,46 +119,6 @@ export class AppHome extends LitElement {
         margin-left: 6px;
       }
 
-      @media(prefers-color-scheme: light) {
-        fast-button::part(content) {
-          color: var(--app-color-primary);
-        }
-
-        #openButton, #revertButton, .headerSaveButton, fast-card fast-button {
-          background: var(--app-color-primary) !important;
-        }
-
-        #openButton::part(content), #revertButton::part(content), .headerSaveButton::part(content), fast-card fast-button::part(content) {
-          color: white;
-        }
-
-        app-header #openButton, #toolbar fast-button {
-          background: var(--app-color-secondary) !important;
-        }
-
-        app-header #openButton::part(content) {
-          color: var(--app-color-primary) !important;
-        }
-
-        fast-button#saveButton {
-          background-color: #c239b3 !important;
-        }
-
-        fast-button#saveButton::part(content) {
-          color: white;
-        }
-
-        @media(min-width: 1200px) {
-          app-header .headerSaveButton, app-header #revertButton, app-header #shareButton {
-            background: var(--app-color-secondary) !important;
-          }
-  
-          app-header .headerSaveButton::part(content), app-header #revertButton::part(content), app-header #shareButton::part(content) {
-            color: var(--app-color-primary);
-          }
-        }
-      }
-
       pwa-install {
         position: absolute;
         bottom: 16px;
