@@ -27,10 +27,27 @@ export class AppCamera extends LitElement {
       #camera video {
         width: 100%;
         border-radius: 4px;
+        min-height: 300px;
       }
 
       #camera #cameraActions, #camera #cameraActions fast-button {
         width: 100%;
+      }
+
+      #closeBlock {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      #closeBlock fast-button ion-icon {
+        font-size: 2em;
+      }
+
+      @media(screen-spanning: single-fold-vertical) {
+        #camera {
+          right: calc(env(fold-left) + 33px);
+        }
       }
 
       @media(min-width: 1200px) {
@@ -45,6 +62,8 @@ export class AppCamera extends LitElement {
 
         #camera video {
           margin: 8em;
+          margin-bottom: 4em;
+          margin-top: 4em;
           border-radius: 4px;
           width: initial;
         }
@@ -76,6 +95,12 @@ export class AppCamera extends LitElement {
     const blob = await this.imageCapture.takePhoto();
     console.log(blob);
 
+    const tracks = this.mediaStream?.getTracks();
+
+    tracks?.forEach((track) => {
+      track.stop();
+    })
+
     let event = new CustomEvent('got-file', {
       detail: {
         file: blob
@@ -84,9 +109,20 @@ export class AppCamera extends LitElement {
     this.dispatchEvent(event);
   }
 
+  close() {
+    let event = new CustomEvent('closed', {
+    });
+    this.dispatchEvent(event);
+  }
+
   render() {
     return html`
       <div id="camera">
+        <div id="closeBlock">
+          <fast-button @click="${() => this.close()}" appearance="lightweight">
+            <ion-icon name="close-outline"></ion-icon>
+          </fast-button>
+        </div>
         <video autoplay></video>
       
         <div id="cameraActions">

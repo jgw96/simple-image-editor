@@ -94,6 +94,13 @@ export class AppHeader extends LitElement {
         padding-bottom: 2em;
       }
 
+      @media(screen-spanning: single-fold-vertical) {
+        fast-dialog::part(positioning-region) {
+          left: calc(env(fold-left) + 34px);
+          padding: 5% !important;
+        }
+      }
+
       @media(min-width: 1200px) {
         fast-dialog::part(positioning-region) {
           padding-left: 35%;

@@ -389,6 +389,13 @@ export class AppHome extends LitElement {
         }
       }
 
+      #dualExtras #dualTakePhoto {
+        background: var(--app-color-secondary);
+        position: fixed;
+        top: -3.3em;
+        right: 12.8em;
+      }
+
       #openButton {
         background: var(--app-color-secondary);
       }
@@ -722,6 +729,10 @@ export class AppHome extends LitElement {
     this.takingPhoto = true;
   }
 
+  closeCamera() {
+    this.takingPhoto = false;
+  }
+
   render() {
     return html`
     <app-header>
@@ -745,16 +756,16 @@ export class AppHome extends LitElement {
         Save Copy
         <ion-icon name="save-outline"></ion-icon>
       </fast-button>` : null}
-    
-      <fast-button id="openButton" @click="${() => this.openImage()}">
-        Open Image
-        <ion-icon name="image-outline"></ion-icon>
-      </fast-button>
 
       ${this.imageOpened ? html`<fast-button id="takePhotoButton" @click="${() => this.takePhoto()}">
         Take Photo
         <ion-icon name="camera-outline"></ion-icon>
       </fast-button>` : null }
+    
+      <fast-button id="openButton" @click="${() => this.openImage()}">
+        Open Image
+        <ion-icon name="image-outline"></ion-icon>
+      </fast-button>
       
     </app-header>
     
@@ -771,7 +782,7 @@ export class AppHome extends LitElement {
       </fast-button>
     </fast-dialog>
 
-    ${this.takingPhoto ? html`<app-camera @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}"></app-camera>` : null }
+    ${this.takingPhoto ? html`<app-camera @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}" @closed="${() => this.closeCamera()}"></app-camera>` : null }
     
       ${this.imageOpened ? html`
 
@@ -851,7 +862,10 @@ export class AppHome extends LitElement {
                 <ion-icon name="save-outline"></ion-icon>
               </fast-button>
 
-              
+              <fast-button id="dualTakePhoto" @click="${() => this.takePhoto()}">
+                Take Photo
+                <ion-icon name="camera-outline"></ion-icon>
+              </fast-button>
               
             </div>
       </div>
@@ -868,10 +882,19 @@ export class AppHome extends LitElement {
                     Welcome! Make quick, simple edits to any image, tap "Open Image" to get started!
                   </p>
 
-                  <fast-button appearance="primary" id="openButton" @click="${() => this.openImage()}">
-                    Open Image
-                    <ion-icon name="image-outline"></ion-icon>
-                  </fast-button>
+                  <div id="welcomeActions">
+                    <fast-button id="welcomePhotoButton" @click="${() => this.takePhoto()}">
+                      Take Photo
+                      <ion-icon name="camera-outline"></ion-icon>
+                    </fast-button>
+
+                    <fast-button appearance="primary" id="openButton" @click="${() => this.openImage()}">
+                      Open Image
+                      <ion-icon name="image-outline"></ion-icon>
+                    </fast-button>
+                  </div>
+
+
             </div>
 
             ${
