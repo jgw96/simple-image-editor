@@ -1,4 +1,4 @@
-import { LitElement, css, html, customElement, property } from 'lit-element';
+import { LitElement, css, html, customElement, internalProperty } from 'lit-element';
 
 
 import { fileOpen, fileSave, FileSystemHandle } from 'browser-nativefs';
@@ -20,14 +20,14 @@ export class AppHome extends LitElement {
 
   // For more information on using properties in lit-element
   // check out this link https://lit-element.polymer-project.org/guide/properties#declare-with-decorators
-  @property() message: string = "Welcome!";
-  @property() imageOpened: boolean = false;
-  @property() imageBlob: File | File[] | Blob | null = null;
-  @property() originalBlob: File | File[] | Blob | null = null;
-  @property() latest: any[] | null | undefined = null;
-  @property() applying: boolean = false;
-  @property() handlingShortcut: boolean = false;
-  @property() takingPhoto: boolean = false;
+  @internalProperty() message: string = "Welcome!";
+  @internalProperty() imageOpened: boolean = false;
+  @internalProperty() imageBlob: File | File[] | Blob | null = null;
+  @internalProperty() originalBlob: File | File[] | Blob | null = null;
+  @internalProperty() latest: any[] | null | undefined = null;
+  @internalProperty() applying: boolean = false;
+  @internalProperty() handlingShortcut: boolean = false;
+  @internalProperty() takingPhoto: boolean = false;
 
   // mainCanvas: HTMLCanvasElement | undefined;
   mainImg: HTMLImageElement | undefined;
