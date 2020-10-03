@@ -392,7 +392,7 @@ export class AppHome extends LitElement {
   async firstUpdated() {
     this.init();
 
-    this.mainImg = (this.shadowRoot?.querySelector("img") as HTMLImageElement);
+    this.mainImg = (this.shadowRoot?.querySelector("#mainImage") as HTMLImageElement);
 
     navigator.serviceWorker.onmessage = (event) => {
       console.log(event);
