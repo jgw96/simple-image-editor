@@ -92,6 +92,13 @@ export class AppHome extends LitElement {
         font-weight: bold;
       }
 
+      #homePhoto {
+        position: absolute;
+        bottom: 0;
+        max-height: 24em;
+        right: 0;
+      }
+
       @media(max-width: 290px) {
         #welcome {
           margin: 1em;
@@ -99,6 +106,12 @@ export class AppHome extends LitElement {
 
         app-header #openButton {
           display: none;
+        }
+      }
+
+      @media(max-width: 800px) {
+        #homePhoto {
+          max-height: 20em;
         }
       }
 
@@ -834,6 +847,8 @@ export class AppHome extends LitElement {
 
       ${
         !this.imageOpened ? html`
+        <img id="homePhoto" src="/assets/homePhoto.svg">
+
         <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
           <div id="welcome">
 

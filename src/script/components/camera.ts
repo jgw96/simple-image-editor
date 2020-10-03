@@ -76,7 +76,9 @@ export class AppCamera extends LitElement {
   }
 
   async firstUpdated() {
-    this.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    this.mediaStream = await navigator.mediaDevices.getUserMedia({ video: {
+      facingMode: "environment"
+    }, audio: false });
     const videoEl = this.shadowRoot?.querySelector("video");
 
     if (videoEl) {
