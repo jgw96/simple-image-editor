@@ -444,9 +444,8 @@ export class AppHome extends LitElement {
         
     
         const fileHandle = launchParams.files[0];
-        const blob = await fileHandle.getFile();
         
-        this.handleSharedImage(blob);
+        this.handleSharedImage(fileHandle);
       });
     }
   }
