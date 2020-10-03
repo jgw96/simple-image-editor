@@ -81,8 +81,8 @@
     "params": {
       "files": [
         {
-          "name": "file",
-          "accept": [".png", ".jpg"]
+          "name": "externalMedia",
+          "accept": ["image/jpeg", "image/png"]
         }
       ]
     }
