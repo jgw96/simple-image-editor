@@ -260,6 +260,10 @@ export class AppHome extends LitElement {
       }
 
       @media(screen-spanning: single-fold-horizontal) {
+        .headerAction {
+          display: none;
+        }
+
         #toolbar {
           display: flex !important;
           flex-direction: column;
@@ -293,6 +297,10 @@ export class AppHome extends LitElement {
       }
 
       @media(screen-spanning: single-fold-vertical) {
+
+        .headerAction {
+          display: none;
+        }
 
         #imageWrapper {
           width: 50%;
@@ -364,9 +372,11 @@ export class AppHome extends LitElement {
 
       #dualExtras #dualTakePhoto {
         background: var(--app-color-secondary);
+        bottom: 10px;
+        top: initial;
+        left: calc(env(fold-left) + 39px);
+        right: initial;
         position: fixed;
-        top: -3.3em;
-        right: 12.8em;
       }
 
       #openButton {
@@ -710,27 +720,27 @@ export class AppHome extends LitElement {
     return html`
     <app-header>
 
-    ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="shareButton" @click="${() => this.shareImage()}">
+    ${this.imageOpened ? html`<fast-button class="headerAction" id="shareButton" @click="${() => this.shareImage()}">
         Share
         <ion-icon name="share-outline"></ion-icon>
       </fast-button>` : null}
 
-      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="shareButton" class="headerSaveButton" @click="${() => this.smartCrop()}">
+      ${this.imageOpened ? html`<fast-button id="shareButton" class="headerSaveButton headerAction" @click="${() => this.smartCrop()}">
         Smart Crop
         <ion-icon name="crop-outline"></ion-icon>
       </fast-button>` : null}
 
-      ${this.imageOpened && this.checkDual() === false ? html`<fast-button class="headerAction" id="revertButton" @click="${() => this.revert()}">
+      ${this.imageOpened ? html`<fast-button class="headerAction" id="revertButton" @click="${() => this.revert()}">
           revert
           <ion-icon name="refresh-outline"></ion-icon>
         </fast-button>` : null}
     
-      ${this.imageOpened && this.checkDual() === false ? html`<fast-button id="saveButton" class="headerSaveButton" @click="${() => this.saveImage()}">
+      ${this.imageOpened ? html`<fast-button id="saveButton" class="headerSaveButton headerAction" @click="${() => this.saveImage()}">
         Save Copy
         <ion-icon name="save-outline"></ion-icon>
       </fast-button>` : null}
 
-      ${this.imageOpened ? html`<fast-button id="takePhotoButton" @click="${() => this.takePhoto()}">
+      ${this.imageOpened ? html`<fast-button id="takePhotoButton" class="headerAction" @click="${() => this.takePhoto()}">
         Take Photo
         <ion-icon name="camera-outline"></ion-icon>
       </fast-button>` : null }
