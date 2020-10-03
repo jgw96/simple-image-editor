@@ -120,9 +120,8 @@ export class AppHome extends LitElement {
         bottom: 0;
         left: 0;
         right: 0;
-        /* width: 100%; */
         padding: 12px;
-        background: var(--app-color-primary);
+        background: #201f1ede;
         backdrop-filter: blur(8px);
         display: flex;
         justify-content: flex-end;
@@ -220,9 +219,17 @@ export class AppHome extends LitElement {
       @media(max-width: 1200px) {
         #toolbar {
           display: initial;
-          overflow-x: auto;
-          overflow-y: hidden;
-          white-space: nowrap;
+          justify-content: initial;
+          z-index: 1;
+        }
+
+        #toolbarActions {
+          display: grid;
+          grid-template-columns: auto auto auto;
+        }
+
+        #toolbar fast-button {
+          margin: 6px;
         }
 
         #latestBlock {
@@ -374,7 +381,7 @@ export class AppHome extends LitElement {
         background: var(--app-color-secondary);
         bottom: 10px;
         top: initial;
-        left: calc(env(fold-left) + 39px);
+        left: 12px;
         right: initial;
         position: fixed;
       }
