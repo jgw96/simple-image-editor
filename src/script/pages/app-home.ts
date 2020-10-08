@@ -731,11 +731,6 @@ export class AppHome extends LitElement {
         <ion-icon name="share-outline"></ion-icon>
       </fast-button>` : null}
 
-      ${this.imageOpened ? html`<fast-button id="shareButton" class="headerSaveButton headerAction" @click="${() => this.smartCrop()}">
-        Smart Crop
-        <ion-icon name="crop-outline"></ion-icon>
-      </fast-button>` : null}
-
       ${this.imageOpened ? html`<fast-button class="headerAction" id="revertButton" @click="${() => this.revert()}">
           revert
           <ion-icon name="refresh-outline"></ion-icon>
@@ -836,11 +831,6 @@ export class AppHome extends LitElement {
                 <ion-icon name="share-outline"></ion-icon>
               </fast-button>
 
-              <fast-button @click="${() => this.smartCrop()}">
-                Smart Crop
-                <ion-icon name="crop-outline"></ion-icon>
-              </fast-button>
-
               <fast-button @click="${() => this.revert()}">
                 Revert
                 <ion-icon name="refresh-outline"></ion-icon>
@@ -887,31 +877,6 @@ export class AppHome extends LitElement {
 
 
             </div>
-
-            ${
-              this.latest ? html`
-              <div id="latestBlock">
-                <h3>My Recent</h3>
-
-                <div id="recentsBlock">
-                ${
-                  this.latest.map((late) => {
-                    return html`
-                      <fast-card use-defaults>
-                        <img src="${URL.createObjectURL(late.preview)}">
-                        <h4>${late.name}</h4>
-
-                        <fast-button @click="${() => this.handleRecent(late.handle)}">
-                          Open
-                        </fast-button>
-                      </fast-card>
-                    `
-                  })
-                }
-                </div>
-              </div>
-              ` : null
-            }
           </div>
         </drag-drop>
           ` : null}
