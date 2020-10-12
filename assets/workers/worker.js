@@ -3,8 +3,19 @@ importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");
 importScripts("/assets/filters/webgl.js");
 // importScripts("../../../dist/umd/comlink.js");
 
+let offscreenContext = null;
+let canvas = null;
+
+onmessage = function (evt) {
+  if (evt.data.canvas) {
+    canvas = evt.data.canvas;
+    offscreenContext = canvas.getContext("2d");
+  }
+
+  // ... some drawing using the gl context ...
+};
+
 const obj = {
-  offscreen: new OffscreenCanvas(40, 40),
   filter: new WebGLImageFilter(),
 
   async doWebGL(type, canvasImage, width, height, amount) {
@@ -15,20 +26,23 @@ const obj = {
       this.filter.addFilter(type);
     }
 
-    this.offscreen.width = width;
-    this.offscreen.height = height;
-
-    offscreenContext = this.offscreen.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
 
     offscreenContext.drawImage(canvasImage, 0, 0, width, height);
 
-    const filtered = this.filter.apply(this.offscreen);
+    const filtered = this.filter.apply(canvas);
 
-    const blobToDraw = filtered.convertToBlob();
+    offscreenContext.drawImage(filtered, 0, 0, width, height);
 
     this.filter.reset();
+  },
 
-    return blobToDraw;
+  loadImage(imageData, width, height) {
+    canvas.width = width;
+    canvas.height = height;
+    
+    offscreenContext.drawImage(imageData, 0, 0, width, height);
   },
 
   async getBlob(imageData, width, height) {
@@ -61,17 +75,17 @@ const obj = {
     return new Promise((resolve, reject) => {
       this.blobToDataURL(blob, async (dataURL) => {
         const splitData = dataURL.split(',')[1];
-  
+
         const bytes = self.atob(splitData);
         const buf = new ArrayBuffer(bytes.length);
         let byteArr = new Uint8Array(buf);
-  
+
         for (var i = 0; i < bytes.length; i++) {
           byteArr[i] = bytes.charCodeAt(i);
         }
-  
+
         let data = null;
-  
+
         try {
           const response = await fetch(`https://westus2.api.cognitive.microsoft.com/vision/v3.0/generateThumbnail?width=400&height=400&smartCropping=true`, {
             headers: {
@@ -82,13 +96,13 @@ const obj = {
             body: byteArr
           });
           data = await response.blob();
-  
+
           console.log(data);
 
           if (data.type !== "application/json") {
             resolve(data);
           }
-  
+
         } catch (error) {
           console.error(error);
           reject(error);
