@@ -30,6 +30,7 @@ export class AppHome extends LitElement {
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
+  imageBitmap: ImageBitmap | undefined;
 
   worker: any;
   img: any;
@@ -60,6 +61,7 @@ export class AppHome extends LitElement {
       bottom: 0;
       z-index: 9999;
     }
+
       #latestBlock h3 {
         text-align: initial;
       }
@@ -133,14 +135,17 @@ export class AppHome extends LitElement {
           bottom: initial;
         }
       }
+
       #fileInfo {
         color: white;
         margin: 10px;
         margin-bottom: 0;
         display: none;
       }
+
       canvas {
         background: #181818;
+        width: 100vh;
       }
 
       #imageWrapper {
@@ -206,6 +211,10 @@ export class AppHome extends LitElement {
           display: initial;
           justify-content: initial;
           z-index: 1;
+        }
+
+        canvas {
+          width: 100%;
         }
 
         #toolbarActions {
@@ -285,8 +294,8 @@ export class AppHome extends LitElement {
           display: none;
         }
 
-        #imageWrapper {
-          width: 50%;
+        canvas {
+          width: 48.4%;
         }
 
         #toolbarActions {
@@ -463,7 +472,8 @@ export class AppHome extends LitElement {
     this.img = new Image();
 
     this.img.onload = async () => {
-      this.worker.loadImage(await window.createImageBitmap(this.img), this.mainCanvas?.width, this.mainCanvas?.height);
+      
+      this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
 
       this.imageOpened = true;
     }
@@ -578,7 +588,9 @@ export class AppHome extends LitElement {
     this.img.onload = async () => {
       if (this.mainCanvas) {
 
-        this.worker.loadImage(await window.createImageBitmap(this.img), this.mainCanvas?.width, this.mainCanvas?.height);
+        this.imageBitmap = await window.createImageBitmap(this.img)
+
+        this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
 
         this.imageOpened = true;
       }
@@ -656,16 +668,12 @@ export class AppHome extends LitElement {
   }
 
   async applyWebglFilter(type: string) {
-    this.applying = true;
-
     try {
-      await this.worker.doWebGL(type, await window.createImageBitmap(this.img), this.mainCanvas?.width || 0, this.mainCanvas?.height || 0, 1);
+      await this.worker.doWebGL(type, this.imageBitmap, this.img?.naturalWidth || 0, this.img?.naturalHeight || 0, 0.6);
     }
     catch( err ) { 
       console.error(err);
     }
-
-    this.applying = false;
   }
 
   async enhance() {

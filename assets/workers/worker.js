@@ -29,20 +29,42 @@ const obj = {
     canvas.width = width;
     canvas.height = height;
 
-    offscreenContext.drawImage(canvasImage, 0, 0, width, height);
+    // offscreenContext.drawImage(canvasImage, 0, 0, width, height);
+
+    this.drawImage(canvasImage, width, height);
 
     const filtered = this.filter.apply(canvas);
 
-    offscreenContext.drawImage(filtered, 0, 0, width, height);
+    // offscreenContext.drawImage(filtered, 0, 0, width, height);
+    this.drawImage(filtered, width, height);
 
     this.filter.reset();
   },
 
-  loadImage(imageData, width, height) {
-    canvas.width = width;
-    canvas.height = height;
+  drawImage(image, width, height) {
+    const inputWidth = width;
+    const inputHeight = height;
     
-    offscreenContext.drawImage(imageData, 0, 0, width, height);
+    // get the aspect ratio of the input image
+    const outputImageAspectRatio = 1;
+    const inputImageAspectRatio = inputWidth / inputHeight;
+
+    let outputWidth = inputWidth;
+    let outputHeight = inputHeight;
+    if (inputImageAspectRatio > outputImageAspectRatio) {
+        outputWidth = inputHeight * outputImageAspectRatio;
+    } else if (inputImageAspectRatio < outputImageAspectRatio) {
+        outputHeight = inputWidth / outputImageAspectRatio;
+    }
+
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+
+    offscreenContext.drawImage(image, 0, 0);
+  },
+
+  loadImage(imageData, width, height) {
+    this.drawImage(imageData, width, height);
   },
 
   async getBlob(imageData, width, height) {
