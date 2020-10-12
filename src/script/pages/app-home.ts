@@ -65,18 +65,22 @@ export class AppHome extends LitElement {
       #latestBlock h3 {
         text-align: initial;
       }
+      
       #latestBlock fast-card {
         margin-top: 1em;
         padding: 0px;
         padding-bottom: 12px;
       }
+
       #latestBlock {
         width: 100%;
       }
+
       #latestBlock fast-card img {
         object-fit: cover;
         width: 100%;
       }
+
       #welcome {
         display: flex;
         flex-direction: column;
@@ -84,6 +88,7 @@ export class AppHome extends LitElement {
         align-items: center;
         text-align: center;
         font-weight: bold;
+        align-self: flex-start;
       }
 
       #homePhoto {
@@ -294,10 +299,6 @@ export class AppHome extends LitElement {
           display: none;
         }
 
-        canvas {
-          width: 48.4%;
-        }
-
         #toolbarActions {
           display: flex;
           flex-direction: column;
@@ -472,10 +473,14 @@ export class AppHome extends LitElement {
     this.img = new Image();
 
     this.img.onload = async () => {
-      
-      this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
+      if (this.mainCanvas) {
 
-      this.imageOpened = true;
+        this.imageBitmap = await window.createImageBitmap(this.img);
+
+        this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
+
+        this.imageOpened = true;
+      }
     }
 
     this.img.src = URL.createObjectURL(blob);
@@ -588,7 +593,7 @@ export class AppHome extends LitElement {
     this.img.onload = async () => {
       if (this.mainCanvas) {
 
-        this.imageBitmap = await window.createImageBitmap(this.img)
+        this.imageBitmap = await window.createImageBitmap(this.img);
 
         this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
 
