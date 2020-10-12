@@ -8,7 +8,6 @@ import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
 
 import '../components/drag-drop';
 import '../components/camera';
-import 'pinch-zoom-element';
 
 
 // For more info on the @pwabuilder/pwainstall component click here https://github.com/pwa-builder/pwa-install
@@ -29,60 +28,55 @@ export class AppHome extends LitElement {
   @internalProperty() handlingShortcut: boolean = false;
   @internalProperty() takingPhoto: boolean = false;
 
-  // mainCanvas: HTMLCanvasElement | undefined;
-  mainImg: HTMLImageElement | undefined;
+  mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
+  imageBitmap: ImageBitmap | undefined;
 
   worker: any;
   img: any;
 
   static get styles() {
     return css`
+    fast-dialog::part(positioning-region) {
+      z-index: 9999;
+      padding: 15%;
+      background: #181818ab;
+      backdrop-filter: blur(10px);
+    }
 
-      fast-dialog::part(positioning-region) {
-        z-index: 9999;
-        padding: 15%;
-        background: #181818ab;
-        backdrop-filter: blur(10px);
-      }
+    fast-dialog::part(control) {
+      padding-left: 12px;
+      padding-right: 12px;
+      
+      display: flex;
+      flex-direction: column;
+      height: fit-content;
+      padding-bottom: 2em;
+    }
 
-      fast-dialog::part(control) {
-        padding-left: 12px;
-        padding-right: 12px;
-        
-        display: flex;
-        flex-direction: column;
-        height: fit-content;
-        padding-bottom: 2em;
-      }
-
-      fast-progress {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 9999;
-      }
+    fast-progress {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+    }
 
       #latestBlock h3 {
         text-align: initial;
       }
-
       #latestBlock fast-card {
         margin-top: 1em;
         padding: 0px;
         padding-bottom: 12px;
       }
-
       #latestBlock {
         width: 100%;
       }
-
       #latestBlock fast-card img {
         object-fit: cover;
         width: 100%;
       }
-
       #welcome {
         display: flex;
         flex-direction: column;
@@ -114,7 +108,6 @@ export class AppHome extends LitElement {
           max-height: 20em;
         }
       }
-
       #toolbar {
         position: fixed;
         bottom: 0;
@@ -126,11 +119,9 @@ export class AppHome extends LitElement {
         display: flex;
         justify-content: flex-end;
       }
-
       #toolbar fast-button, app-header fast-button, #welcome fast-button {
         margin-left: 6px;
       }
-
       pwa-install {
         position: absolute;
         bottom: 16px;
@@ -149,8 +140,12 @@ export class AppHome extends LitElement {
         color: white;
         margin: 10px;
         margin-bottom: 0;
-
         display: none;
+      }
+
+      canvas {
+        background: #181818;
+        width: 100vh;
       }
 
       #imageWrapper {
@@ -169,6 +164,7 @@ export class AppHome extends LitElement {
         max-width: 100%;
       }
 
+      
       #dualExtras {
         position: absolute;
         bottom: 0;
@@ -180,28 +176,23 @@ export class AppHome extends LitElement {
         padding-right: 6px;
         display: none;
       }
-
       @media(min-width: 1200px) {
         #toolbar {
           top: 3.5em;
           bottom: initial;
           justify-content: flex-start;
         }
-
         #recentsBlock {
           display: flex;
           justify-content: flex-start;
         }
-
         #latestBlock {
           margin-top: 2em;
         }
-
         #latestBlock fast-card {
           margin-right: 1em;
           max-width: 22em;
         }
-
         #latestBlock fast-card img {
           height: 300px;
         }
@@ -215,12 +206,15 @@ export class AppHome extends LitElement {
           padding-bottom: 3em;
         }
       }
-
       @media(max-width: 1200px) {
         #toolbar {
           display: initial;
           justify-content: initial;
           z-index: 1;
+        }
+
+        canvas {
+          width: 100%;
         }
 
         #toolbarActions {
@@ -231,27 +225,24 @@ export class AppHome extends LitElement {
         #toolbar fast-button {
           margin: 6px;
         }
-
         #latestBlock {
           display: none;
         }
-
         #shareButton {
           position: absolute;
           top: 5em;
           right: 6px;
         }
-
         #revertButton {
           position: absolute;
           top: 5em;
-          right: 116px;
+          right: 82px;
         }
 
         #takePhotoButton {
           position: absolute;
           top: 5em;
-          right: 194px;
+          right: 158px;
         }
 
         #cropButton {
@@ -265,8 +256,8 @@ export class AppHome extends LitElement {
           max-width: 100%;
         }
       }
-
       @media(screen-spanning: single-fold-horizontal) {
+
         .headerAction {
           display: none;
         }
@@ -275,18 +266,14 @@ export class AppHome extends LitElement {
           display: flex !important;
           flex-direction: column;
           justify-content: flex-start;
-
           height: 50%;
         }
-
         #toolbar fast-button {
           margin-bottom: 10px;
         }
-
         #dualExtras {
           display: flex;
         }
-
         #toolbarActions {
           display: flex;
           flex-direction: column;
@@ -302,15 +289,13 @@ export class AppHome extends LitElement {
           display: none;
         }
       }
-
       @media(screen-spanning: single-fold-vertical) {
-
         .headerAction {
           display: none;
         }
 
-        #imageWrapper {
-          width: 50%;
+        canvas {
+          width: 48.4%;
         }
 
         #toolbarActions {
@@ -323,18 +308,15 @@ export class AppHome extends LitElement {
         }
 
         #welcome {
-
           display: flex;
           flex-direction: row;
           right: initial;
           margin: 0;
           margin-top: 1em;
-
           justify-content: center;
           align-items: center;
           width: 50%;
         }
-
         #welcome #latestBlock {
           flex: 1;
           margin: 2em;
@@ -349,29 +331,24 @@ export class AppHome extends LitElement {
           flex: 0 0 calc(env(fold-left) - 49px);
           margin-left: 2em;
         }
-
+        
         #toolbar {
           left: calc(env(fold-right) - 1px);
           height: 89%;
           display: flex;
           flex-direction: column;
           justify-content: flex-start;
-
           width: 47%;
-
           overflow: initial;
           white-space: initial;
         }
-
         #toolbar fast-button {
           margin-bottom: 10px;
         }
-
         #dualExtras {
           display: flex;
           padding-right: 12px;
         }
-
         .headerSaveButton {
           display: none;
         }
@@ -389,7 +366,6 @@ export class AppHome extends LitElement {
       #openButton {
         background: var(--app-color-secondary);
       }
-
       #saveButton {
         background: #5c2e91 !important;
       }
@@ -401,15 +377,21 @@ export class AppHome extends LitElement {
   }
 
   async init() {
+    this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
+    this.resizeCanvas();
+
+    let offscreen = this.mainCanvas.transferControlToOffscreen();
+
     const underlying = new Worker("/assets/workers/worker.js");
     // WebWorkers use `postMessage` and therefore work with Comlink.
+
+    underlying.postMessage({canvas: offscreen}, [offscreen])
+    
     this.worker = Comlink.wrap(underlying);
   }
 
   async firstUpdated() {
     this.init();
-
-    this.mainImg = (this.shadowRoot?.querySelector("#mainImage") as HTMLImageElement);
 
     navigator.serviceWorker.onmessage = (event) => {
       console.log(event);
@@ -418,6 +400,7 @@ export class AppHome extends LitElement {
       if (imageBlob) {
         this.handleSharedImage(imageBlob);
       }
+      
     };
 
     this.fileHandler();
@@ -427,9 +410,12 @@ export class AppHome extends LitElement {
     }
 
     window.onresize = () => {
+      this.resizeCanvas();
+
       if (this.imageBlob) {
         this.handleSharedImage((this.imageBlob as Blob));
-      } 
+      }
+      
     }
 
     this.latest = await this.getLatest();
@@ -450,19 +436,56 @@ export class AppHome extends LitElement {
     }
   }
 
-  handleSharedImage(blob: Blob) {
-    if (this.mainImg) {
-      this.mainImg.src = URL.createObjectURL(blob);
-
-      this.originalBlob = blob;
+  resizeCanvas() {
+    if (this.mainCanvas) {
+      if ((window as any).getWindowSegments) {
+        const screenSegments = (window as any).getWindowSegments();
+        if (screenSegments.length > 1) {
+          // now we know the device is a foldable
+          // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
+          // and we can update CSS classes in our layout as appropriate 
   
-      this.imageBlob = blob;
+          // other changes as required for layout
+  
+          if (screenSegments[0].width === screenSegments[1].width) {
+            this.mainCanvas.height = screenSegments[0].height - 60;
+            this.mainCanvas.width = screenSegments[0].width + 1;
+          }
+          else {
+            this.mainCanvas.height = window.innerHeight - 60;
+            this.mainCanvas.width = screenSegments[0].width + 1;
+          }
+        }
+        else {
+          this.mainCanvas.height = window.innerHeight - 60;
+          this.mainCanvas.width = window.innerWidth;
+        }
+      }
+      else {
+        this.mainCanvas.height = window.innerHeight - 60;
+        this.mainCanvas.width = window.innerWidth;
+      }
+    }
+  }
+
+  handleSharedImage(blob: Blob) {
+    this.img = new Image();
+
+    this.img.onload = async () => {
+      
+      this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
 
       this.imageOpened = true;
+    }
 
-      if (this.takingPhoto === true) {
-        this.takingPhoto = false;
-      }
+    this.img.src = URL.createObjectURL(blob);
+
+    this.originalBlob = blob;
+
+    this.imageBlob = blob;
+
+    if (this.takingPhoto) {
+      this.takingPhoto = false;
     }
   }
 
@@ -560,34 +583,35 @@ export class AppHome extends LitElement {
 
     this.imageBlob = this.originalBlob;
 
-    if (this.mainImg) {
-      this.mainImg.src = window.URL.createObjectURL(this.imageBlob);
+    this.img = new Image();
 
-      this.imageOpened = true;
+    this.img.onload = async () => {
+      if (this.mainCanvas) {
+
+        this.imageBitmap = await window.createImageBitmap(this.img)
+
+        this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
+
+        this.imageOpened = true;
+      }
     }
 
-    if (this.handlingShortcut === true) {
-      this.handlingShortcut = false;
-    }
+    this.img.src = URL.createObjectURL(this.imageBlob);
   }
 
   async saveImage() {
-    if (this.mainImg) {
-      const blob = await this.worker.getBlob(await window.createImageBitmap(this.mainImg), this.mainImg.naturalWidth, this.mainImg.naturalHeight);
-
+    this.mainCanvas?.toBlob(async (blob) => {
       if (blob) {
         await fileSave(blob, {
           fileName: 'Untitled.png',
           extensions: ['.png'],
         });
       }
-    }
+    });
   }
 
-  async shareImage() {
-    if (this.mainImg) {
-      const blob = await this.worker.getBlob(await window.createImageBitmap(this.mainImg), this.mainImg.naturalWidth, this.mainImg.naturalHeight);
-
+  shareImage() {
+    this.mainCanvas?.toBlob(async (blob) => {
       if (blob) {
         const file = new File([blob], "untitled.png", {
           type: "image/png"
@@ -603,8 +627,7 @@ export class AppHome extends LitElement {
           console.log(`Your system doesn't support sharing files.`);
         }
       }
-    }
-
+    });
   }
 
   async technicolor() {
@@ -619,32 +642,42 @@ export class AppHome extends LitElement {
     this.applyWebglFilter("sepia");
   }
 
-  writeImage(blob: Blob) {
-    if (this.mainImg) {
-      this.mainImg.src = URL.createObjectURL(blob);
+  writeCanvas(blob: Blob) {
+    this.img = new Image();
 
-      // this.imageBlob = blob;
+    this.img.onload = () => {
+      if (this.mainCanvas) {
+
+        // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
+        const hRatio = this.mainCanvas.width / this.img.naturalWidth;
+        const vRatio = this.mainCanvas.height / this.img.naturalHeight;
+        const ratio = Math.min(hRatio, vRatio);
+        const centerShift_x = (this.mainCanvas.width - this.img.naturalWidth * ratio) / 2;
+        const centerShift_y = (this.mainCanvas.height - this.img.naturalHeight * ratio) / 2;
+
+        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
+
+        this.mainCanvasContext?.drawImage(this.img, 0, 0, this.img.naturalWidth, this.img.naturalHeight,
+          centerShift_x, centerShift_y, this.img.width * ratio, this.img.height * ratio);
+
+        this.imageOpened = true;
+      }
     }
+
+    this.img.src = URL.createObjectURL(blob);
   }
 
-  async applyWebglFilter(type: string, amount?: number) {
-    this.applying = true;
-
-    if (this.mainImg && this.originalBlob) {
-      try {
-        const blobToDraw = await this.worker.doWebGL(type, await window.createImageBitmap((this.originalBlob as Blob)), this.mainImg.width || 0, this.mainImg.height || 0, amount || null);
-        this.writeImage(blobToDraw);
-      }
-      catch( err ) { 
-        console.error(err);
-      }
+  async applyWebglFilter(type: string) {
+    try {
+      await this.worker.doWebGL(type, this.imageBitmap, this.img?.naturalWidth || 0, this.img?.naturalHeight || 0, 0.6);
     }
-
-    this.applying = false;
+    catch( err ) { 
+      console.error(err);
+    }
   }
 
   async enhance() {
-    this.applyWebglFilter("brightness", 1);
+    this.applyWebglFilter("brightness");
   }
 
   async blackAndWhite() {
@@ -656,7 +689,20 @@ export class AppHome extends LitElement {
   }
 
   async saturate() {
-    this.applyWebglFilter("saturation", 1);
+    this.applyWebglFilter("saturation");
+  }
+
+  async crop() {
+    const canvasData = this.mainCanvas?.toDataURL();
+
+    const blob = await this.worker.doAI(canvasData);
+
+    if (blob) {
+      await fileSave(blob, {
+        fileName: 'Untitled.png',
+        extensions: ['.png'],
+      });
+    }
   }
 
   async rotate() {
@@ -664,23 +710,36 @@ export class AppHome extends LitElement {
     // WebWorkers use `postMessage` and therefore work with Comlink.
     const rotateWorker = Comlink.wrap(underlying);
 
-    const bitmap = await window.createImageBitmap((this.mainImg as HTMLImageElement));
+    this.mainCanvas?.toBlob(async (blob1) => {
 
-    const blob = await rotateWorker.rotateImageOffscreen(this.mainImg?.naturalWidth, this.mainImg?.naturalHeight, bitmap);
+      this.img = new Image();
 
-    this.writeImage(blob);
+      this.img.onload = async () => {
+
+        const bitmap = await window.createImageBitmap(this.img);
+
+        const blob = await rotateWorker.rotateImageOffscreen(this.mainCanvas?.width, this.mainCanvas?.height, bitmap);
+
+        this.mainCanvasContext?.clearRect(0, 0, this.mainCanvas?.width || 0, this.mainCanvas?.height || 0);
+
+        this.writeCanvas(blob);
+      };
+
+
+      this.img.src = URL.createObjectURL(blob1);
+    })
   }
 
   async smartCrop() {
     this.applying = true;
 
-    if (this.mainImg) {
+    /*if (this.mainImg) {
       const blob = await this.worker.doAI(await window.createImageBitmap(this.mainImg), this.mainImg.naturalWidth, this.mainImg.naturalHeight);
 
       if (blob) {
         this.writeImage(blob);
       }
-    }
+    }*/
 
     this.applying = false;
   }
@@ -882,11 +941,7 @@ export class AppHome extends LitElement {
           ` : null}
 
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
-        <div id="imageWrapper">
-          <pinch-zoom>
-            <img id="mainImage">
-          </pinch-zoom>
-        </div>
+        <canvas id="onScreenCanvas"></canvas>
       </drag-drop>
 
       <pwa-install>Install SimpleEdit</pwa-install>
