@@ -139,13 +139,16 @@ export class AppHome extends LitElement {
           left: 6px;
           bottom: initial;
         }
+
+        #fileInfo {
+          display: none;
+        }
       }
 
       #fileInfo {
         color: white;
         margin: 10px;
         margin-bottom: 0;
-        display: none;
       }
 
       canvas {
@@ -183,10 +186,33 @@ export class AppHome extends LitElement {
       }
       @media(min-width: 1200px) {
         #toolbar {
-          top: 3.5em;
-          bottom: initial;
-          justify-content: flex-start;
+          left: 0;
+          right: initial;
+          top: 0;
+          width: 16em;
+          justify-content: initial;
+          flex-direction: column;
         }
+
+        #onScreenCanvas {
+          margin-left: 12em;
+        }
+
+        #toolbarActions {
+          flex-direction: column;
+          display: flex;
+          width: 100%;
+        }
+
+        #toolbarActions fast-button {
+          margin-bottom: 8px;
+        }
+
+        #fileInfo {
+          overflow: hidden;
+          margin-top: 2.4em;
+        }
+
         #recentsBlock {
           display: flex;
           justify-content: flex-start;
