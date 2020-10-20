@@ -12,7 +12,7 @@ import '../components/camera';
 
 // For more info on the @pwabuilder/pwainstall component click here https://github.com/pwa-builder/pwa-install
 import '@pwabuilder/pwainstall';
-import { clear, get, set } from 'idb-keyval';
+import { get, set } from 'idb-keyval';
 
 @customElement('app-home')
 export class AppHome extends LitElement {
@@ -43,6 +43,26 @@ export class AppHome extends LitElement {
       background: #181818ab;
       backdrop-filter: blur(10px);
     }
+
+      fast-button::part(content) {
+        display: flex;
+        align-items: center;
+      }
+
+      fast-button ion-icon {
+        margin-left: 4px;
+      }
+
+        #photosLink {
+          margin-left: 6px;
+        }
+
+      fast-dialog::part(positioning-region) {
+        z-index: 9999;
+        padding: 15%;
+        background: #181818ab;
+        backdrop-filter: blur(10px);
+      }
 
     fast-dialog::part(control) {
       padding-left: 12px;
@@ -564,9 +584,7 @@ export class AppHome extends LitElement {
    const latest: Array<any> = await get('savedImages');
 
    if (handle) {
-    if (latest && latest.length > 2) {
-      await clear();
- 
+    if (latest && latest.length === 0) {
       const newImage = [{
        name: handle.name || "simpleedit",
        handle: handle,
@@ -579,35 +597,23 @@ export class AppHome extends LitElement {
  
       return newImage;
     }
-    else if (latest && latest.length > 0) {
-     const newImage = [...latest, {
-      name: handle.name || "simpleedit",
-      handle: handle,
-      preview: this.originalBlob
-    }];
-    
-     await set('savedImages', newImage)
- 
-     return newImage;
-   }
     else {
-      const newImage = [{
-       name: handle.name || "simpleedit",
-       handle: handle,
-       preview: this.originalBlob
-     }];
- 
-      await set('savedImages',
-       newImage
-      );
- 
+      const newImage = [...latest, {
+        name: handle.name || "simpleedit",
+        handle: handle,
+        preview: this.originalBlob
+      }];
+      
+      await set('savedImages', newImage)
+  
       return newImage;
-    }
    }
-   else {
-     return;
-   }
+
   }
+  else {
+    return;
+  }
+}
 
   async openImage() {
     this.originalBlob = await fileOpen({
@@ -844,6 +850,11 @@ export class AppHome extends LitElement {
         Open Image
         <ion-icon name="image-outline"></ion-icon>
       </fast-button>
+
+      <fast-anchor id="photosLink" href="/gallery" appearance="button">
+        Gallery
+        <ion-icon name="images-outline"></ion-icon>
+      </fast-anchor>
       
     </app-header>
     
