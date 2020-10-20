@@ -133,7 +133,7 @@ export class AppHome extends LitElement {
         right: 16px;
       }
 
-      @media(max-width: 1200px) {
+      @media(max-width: 1000px) {
         pwa-install {
           top: 4.5em;
           left: 6px;
@@ -184,7 +184,7 @@ export class AppHome extends LitElement {
         padding-right: 6px;
         display: none;
       }
-      @media(min-width: 1200px) {
+      @media(min-width: 1000px) {
         #toolbar {
           left: 0;
           right: initial;
@@ -241,15 +241,18 @@ export class AppHome extends LitElement {
           padding-bottom: 3em;
         }
       }
-      @media(max-width: 1200px) {
+
+      @media (max-width: 800px) {
+        canvas {
+          width: 100%;
+        }
+      }
+
+      @media(max-width: 1000px) {
         #toolbar {
           display: initial;
           justify-content: initial;
           z-index: 1;
-        }
-
-        canvas {
-          width: 100%;
         }
 
         #toolbarActions {
@@ -382,6 +385,18 @@ export class AppHome extends LitElement {
         }
         .headerSaveButton {
           display: none;
+        }
+
+        canvas {
+          width: 100%;
+        }
+
+        #onScreenCanvas {
+          margin-left: 0;
+        }
+
+        #toolbar {
+          top: initial;
         }
       }
 

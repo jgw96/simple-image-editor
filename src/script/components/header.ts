@@ -102,7 +102,7 @@ export class AppHeader extends LitElement {
         }
       }
 
-      @media(min-width: 1200px) {
+      @media(min-width: 1000px) {
         fast-dialog::part(positioning-region) {
           padding-left: 35%;
           padding-right: 35%;

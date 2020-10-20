@@ -50,7 +50,7 @@ export class AppCamera extends LitElement {
         }
       }
 
-      @media(min-width: 1200px) {
+      @media(min-width: 1000px) {
         #camera #cameraActions {
           display: flex;
           justify-content: center;

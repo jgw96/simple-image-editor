@@ -12,7 +12,7 @@ export class DragDrop extends LitElement {
             align-items: center;
         }
 
-        @media(max-width: 1200px) {
+        @media(max-width: 1000px) {
             #dragdrop {
                 height: 90vh;
             }
