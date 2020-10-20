@@ -6,20 +6,21 @@ self.addEventListener("message", (event) => {
   }
 });
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== 'POST') return;
-  if (event.request.url.includes('/') === false) return;
+async function shareTargetHandler({ event }) {
+  const data = await event.request.formData();
+  const client = await self.clients.get(event.resultingClientId || event.clientId);
+  // Get the data from the named element 'file'
+  const file = data.get('file');
 
-  event.waitUntil(async () => {
-    const data = await event.request.formData();
-    const client = await self.clients.get(event.resultingClientId || event.clientId);
-    // Get the data from the named element 'file'
-    const file = data.get('file');
+  console.log('file', file);
+  client.postMessage({ file, action: 'load-image' });
+};
 
-    console.log('file', file);
-    client.postMessage({ file, action: 'load-image' });
-  });
-})
+workbox.routing.registerRoute(
+  '/',
+  shareTargetHandler,
+  'POST'
+);
 
 
 workbox.precaching.precacheAndRoute(self.__WB_MANIFEST)
