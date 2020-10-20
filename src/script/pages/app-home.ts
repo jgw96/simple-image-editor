@@ -192,6 +192,12 @@ export class AppHome extends LitElement {
           width: 16em;
           justify-content: initial;
           flex-direction: column;
+
+          animation-duration: 0.4s;
+          animation-name: slidein;
+          animation-fill-mode: forwards;
+
+          contain: content;
         }
 
         app-header #takePhotoButton {
@@ -414,6 +420,18 @@ export class AppHome extends LitElement {
       }
       #saveButton {
         background: #5c2e91 !important;
+      }
+
+      @keyframes slidein {
+        from {
+          transform: translateX(-300px);
+          opacity: 0;
+        }
+      
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
       }
     `;
   }
