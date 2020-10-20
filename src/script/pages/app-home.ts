@@ -403,6 +403,7 @@ export class AppHome extends LitElement {
 
         #toolbar {
           top: initial;
+          animation-name: slideup;
         }
       }
 
@@ -430,6 +431,18 @@ export class AppHome extends LitElement {
       
         to {
           transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideup {
+        from {
+          transform: translateY(300px);
+          opacity: 0;
+        }
+      
+        to {
+          transform: translateY(0);
           opacity: 1;
         }
       }
