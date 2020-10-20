@@ -66,6 +66,7 @@ export class AppIndex extends LitElement {
         animate: true,
         children: [
           { path: '/', component: 'app-home' },
+          { path: '/share/image/', component: 'app-home' },
           {
             path: "/about",
             component: "app-about",
