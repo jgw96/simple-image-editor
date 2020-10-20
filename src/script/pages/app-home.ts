@@ -471,7 +471,7 @@ export class AppHome extends LitElement {
     this.init();
 
     navigator.serviceWorker.onmessage = (event) => {
-      console.log(event);
+      console.log('file event', event);
       const imageBlob = event.data.file;
 
       if (imageBlob) {
@@ -509,7 +509,7 @@ export class AppHome extends LitElement {
         const fileHandle = launchParams.files[0];
         console.log('fileHandle', fileHandle);
         
-        this.handleSharedImage(fileHandle.blob);
+        this.handleRecent(fileHandle);
       });
     }
   }
