@@ -42,25 +42,10 @@ const obj = {
   },
 
   drawImage(image, width, height) {
-    const inputWidth = width;
-    const inputHeight = height;
-    
-    // get the aspect ratio of the input image
-    const outputImageAspectRatio = 1;
-    const inputImageAspectRatio = inputWidth / inputHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-    let outputWidth = inputWidth;
-    let outputHeight = inputHeight;
-    if (inputImageAspectRatio > outputImageAspectRatio) {
-        outputWidth = inputHeight * outputImageAspectRatio;
-    } else if (inputImageAspectRatio < outputImageAspectRatio) {
-        outputHeight = inputWidth / outputImageAspectRatio;
-    }
-
-    canvas.width = outputWidth;
-    canvas.height = outputHeight;
-
-    offscreenContext.drawImage(image, 0, 0);
+    offscreenContext.drawImage(image, 0, 0, width, height, 0, 0, canvas.width, canvas.height);
   },
 
   loadImage(imageData, width, height) {

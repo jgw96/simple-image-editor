@@ -153,7 +153,7 @@ export class AppHome extends LitElement {
 
       canvas {
         background: #181818;
-        width: 100vh;
+        width: 70vw;
       }
 
       #imageWrapper {
