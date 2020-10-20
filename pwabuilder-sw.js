@@ -10,6 +10,8 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== 'POST') return;
   if (event.request.url.includes('/share/image/') === false) return;
 
+  event.respondWith(Response.redirect('/share/image/'));
+
   event.waitUntil(async () => {
     const data = await event.request.formData();
     const client = await self.clients.get(event.resultingClientId || event.clientId);
