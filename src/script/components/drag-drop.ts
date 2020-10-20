@@ -6,7 +6,24 @@ export class DragDrop extends LitElement {
 
     static get styles() {
         return css`
+        #dragdrop {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
+        @media(max-width: 1200px) {
+            #dragdrop {
+                height: 90vh;
+            }
+        }
+
+        @media(screen-spanning: single-fold-vertical) {
+            #dragdrop {
+                width: 48.8%;
+                height: 90vh;
+            }
+        }
         `
     }
 
