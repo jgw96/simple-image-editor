@@ -194,6 +194,10 @@ export class AppHome extends LitElement {
           flex-direction: column;
         }
 
+        app-header #takePhotoButton {
+          margin-left: 2em;
+        }
+
         #onScreenCanvas {
           margin-left: 12em;
         }
