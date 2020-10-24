@@ -39,8 +39,6 @@ export class DragDrop extends LitElement {
 
     // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
     dropHandler(ev: any) {
-        console.log('File(s) dropped', ev);
-
         // Prevent default behavior (Prevent file from being opened)
         ev.preventDefault();
 
@@ -78,16 +76,16 @@ export class DragDrop extends LitElement {
     }
 
     dragOverHandler(ev: any) {
-        console.log('File(s) in drop zone');
 
         // Prevent default behavior (Prevent file from being opened)
         ev.preventDefault();
-        
+
     }
 
     render() {
         return html`
-        <div @drop="${(event: any) => this.dropHandler(event)}" @dragover="${(event: any) => this.dragOverHandler(event)}" id="dragdrop">
+        <div @drop="${(event: any) => this.dropHandler(event)}" @dragover="${(event: any) => this.dragOverHandler(event)}"
+            id="dragdrop">
             <slot></slot>
         </div>
         `;

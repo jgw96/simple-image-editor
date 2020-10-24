@@ -474,6 +474,7 @@ export class AppHome extends LitElement {
 
     navigator.serviceWorker.onmessage = (event) => {
       console.log('file event', event);
+      console.log('file event data', event.data);
       const imageBlob = event.data.file;
 
       if (imageBlob) {
@@ -553,7 +554,6 @@ export class AppHome extends LitElement {
 
     this.img.onload = async () => {
       if (this.mainCanvas) {
-
         this.imageBitmap = await window.createImageBitmap(this.img);
 
         this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
