@@ -345,6 +345,7 @@ export class AppHome extends LitElement {
 
         #fileInfo {
           display: initial;
+          margin-top: 0em;
         }
 
         #welcome {
@@ -373,7 +374,8 @@ export class AppHome extends LitElement {
         }
         
         #toolbar {
-          left: calc(env(fold-right) - 1px);
+          left: initial;
+          right: 0px;
           height: 89%;
           display: flex;
           flex-direction: column;
@@ -956,11 +958,6 @@ export class AppHome extends LitElement {
           <fast-button @click="${() => this.polaroid()}">
             polaroid
             <ion-icon name="bulb-outline"></ion-icon>
-          </fast-button>
-
-          <fast-button @click="${() => this.rotate()}">
-            rotate
-            <ion-icon name="disc-outline"></ion-icon>
           </fast-button>
         </div>
 
