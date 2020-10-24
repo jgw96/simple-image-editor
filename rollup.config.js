@@ -35,8 +35,7 @@ export default {
         '**/*/*.svg',
         '*.js',
         '*.html',
-        'assets/**',
-        '*.json'
+        'assets/**'
       ]
     }),
   ]

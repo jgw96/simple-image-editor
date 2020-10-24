@@ -462,9 +462,7 @@ export class AppHome extends LitElement {
     let offscreen = this.mainCanvas.transferControlToOffscreen();
 
     const underlying = new Worker("/assets/workers/worker.js");
-    // WebWorkers use `postMessage` and therefore work with Comlink.
-
-    underlying.postMessage({canvas: offscreen}, [offscreen])
+    underlying.postMessage({canvas: offscreen}, [offscreen]);
     
     this.worker = Comlink.wrap(underlying);
   }
@@ -480,7 +478,6 @@ export class AppHome extends LitElement {
       if (imageBlob) {
         this.handleSharedImage(imageBlob);
       }
-      
     };
 
     this.fileHandler();
