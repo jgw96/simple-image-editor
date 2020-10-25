@@ -2,7 +2,6 @@ import resolve from 'rollup-plugin-node-resolve';
 import { terser } from "rollup-plugin-terser";
 import { injectManifest } from 'rollup-plugin-workbox';
 import html from '@open-wc/rollup-plugin-html';
-import strip from '@rollup/plugin-strip';
 import copy from 'rollup-plugin-copy';
 import wasm from '@rollup/plugin-wasm';
 
