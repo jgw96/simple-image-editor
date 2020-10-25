@@ -27,6 +27,8 @@ export class AppHome extends LitElement {
   @internalProperty() applying: boolean = false;
   @internalProperty() handlingShortcut: boolean = false;
   @internalProperty() takingPhoto: boolean = false;
+  @internalProperty() drawing: boolean = false;
+  @internalProperty() intensity: number = 0.99;
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
@@ -37,6 +39,79 @@ export class AppHome extends LitElement {
 
   static get styles() {
     return css`
+
+    #intensityLabel {
+      font-weight: bold;
+      margin-left: 8px;
+      margin-top: 1em;
+    }
+
+    #intensity {
+      width: 100%;
+    }
+
+    #colors {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: #201f1ec2;
+      backdrop-filter: blur(10px);
+      border-radius: 4px;
+      padding: 8px;
+
+      animation-name: quickup;
+      animation-duration: 300ms;
+    }
+
+    .color {
+      border: none;
+      height: 1.6em;
+      width: 1.6em;
+      border-radius: 50%;
+      margin: 6px;
+    }
+
+    #red {
+      background: red;
+    }
+
+    #green {
+      background: green;
+    }
+
+    #black {
+      background: black;
+    }
+
+    #blue {
+      background: blue;
+    }
+
+    #yellow {
+      background: yellow;
+    }
+
+    #doneButton {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+
+      animation-name: quickup;
+      animation-duration: 300ms;
+    }
+
+    .enablePenButton {
+      position: fixed;
+      bottom: 16px;
+      left: 14px;
+
+      animation-duration: 0.4s;
+      animation-name: slidein;
+      animation-fill-mode: forwards;
+
+      contain: content;
+    }
+
     fast-dialog::part(positioning-region) {
       z-index: 9999;
       padding: 15%;
@@ -113,6 +188,7 @@ export class AppHome extends LitElement {
           max-height: 20em;
         }
       }
+
       #toolbar {
         position: fixed;
         bottom: 0;
@@ -124,6 +200,7 @@ export class AppHome extends LitElement {
         display: flex;
         justify-content: flex-end;
       }
+
       #toolbar fast-button, app-header fast-button, #welcome fast-button {
         margin-left: 6px;
       }
@@ -151,9 +228,13 @@ export class AppHome extends LitElement {
         margin-bottom: 0;
       }
 
-      canvas {
+      #onScreenCanvas {
         background: #181818;
         width: 70vw;
+      }
+
+      #drawingCanvas {
+       
       }
 
       #imageWrapper {
@@ -252,6 +333,11 @@ export class AppHome extends LitElement {
         canvas {
           width: 100%;
         }
+
+        .enablePenButton {
+          bottom: 13.4em;
+          left: 1.4em;
+        }
       }
 
       @media(max-width: 1000px) {
@@ -261,9 +347,14 @@ export class AppHome extends LitElement {
           z-index: 1;
         }
 
+        .enablePenButton {
+          display: none;
+        }
+
         #toolbarActions {
           display: grid;
           grid-template-columns: auto auto auto;
+          margin-bottom: 1em;
         }
 
         #toolbar fast-button {
@@ -341,10 +432,11 @@ export class AppHome extends LitElement {
         #toolbarActions {
           display: flex;
           flex-direction: column;
+          margin-top: 1em;
         }
 
         #fileInfo {
-          display: initial;
+          display: none;
           margin-top: 0em;
         }
 
@@ -395,12 +487,9 @@ export class AppHome extends LitElement {
           display: none;
         }
 
-        canvas {
-          width: 100%;
-        }
-
         #onScreenCanvas {
           margin-left: 0;
+          width: 100%;
         }
 
         #toolbar {
@@ -448,6 +537,22 @@ export class AppHome extends LitElement {
           opacity: 1;
         }
       }
+
+      @keyframes quickup {
+        from {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+
+        75% {
+          transform: translateY(-10px);
+          opacity: 1;
+        }
+
+        to {
+          transform: translateY(0);
+        }
+      }
     `;
   }
 
@@ -462,8 +567,8 @@ export class AppHome extends LitElement {
     let offscreen = this.mainCanvas.transferControlToOffscreen();
 
     const underlying = new Worker("/assets/workers/worker.js");
-    underlying.postMessage({canvas: offscreen}, [offscreen]);
-    
+    underlying.postMessage({ canvas: offscreen }, [offscreen]);
+
     this.worker = Comlink.wrap(underlying);
   }
 
@@ -492,7 +597,7 @@ export class AppHome extends LitElement {
       if (this.imageBlob) {
         this.handleSharedImage((this.imageBlob as Blob));
       }
-      
+
     }
 
     this.latest = await this.getLatest();
@@ -504,11 +609,11 @@ export class AppHome extends LitElement {
         if (!launchParams.files.length) {
           return;
         }
-        
-    
+
+
         const fileHandle = launchParams.files[0];
         console.log('fileHandle', fileHandle);
-        
+
         this.handleRecent(fileHandle);
       });
     }
@@ -522,9 +627,9 @@ export class AppHome extends LitElement {
           // now we know the device is a foldable
           // it's recommended to test whether screenSegments[0].width === screenSegments[1].width
           // and we can update CSS classes in our layout as appropriate 
-  
+
           // other changes as required for layout
-  
+
           if (screenSegments[0].width === screenSegments[1].width) {
             this.mainCanvas.height = screenSegments[0].height - 60;
             this.mainCanvas.width = screenSegments[0].width + 1;
@@ -583,13 +688,13 @@ export class AppHome extends LitElement {
       const request = await handle.requestPermission({
         writable: true
       })
-  
+
       console.log(request);
-  
+
       if (request === "granted") {
         const blob = await handle.getFile();
         console.log(blob);
-  
+
         this.handleSharedImage(blob);
       }
     }
@@ -607,52 +712,52 @@ export class AppHome extends LitElement {
   }
 
   async saveLatest(handle: FileSystemHandle) {
-   const latest: Array<any> = await get('savedImages');
+    const latest: Array<any> = await get('savedImages');
 
-   if (handle) {
-    if (latest && latest.length > 2) {
-      await clear();
- 
-      const newImage = [{
-       name: handle.name || "simpleedit",
-       handle: handle,
-       preview: this.originalBlob
-     }];
- 
-      await set('savedImages',
-       newImage
-      );
- 
-      return newImage;
+    if (handle) {
+      if (latest && latest.length > 2) {
+        await clear();
+
+        const newImage = [{
+          name: handle.name || "simpleedit",
+          handle: handle,
+          preview: this.originalBlob
+        }];
+
+        await set('savedImages',
+          newImage
+        );
+
+        return newImage;
+      }
+      else if (latest && latest.length > 0) {
+        const newImage = [...latest, {
+          name: handle.name || "simpleedit",
+          handle: handle,
+          preview: this.originalBlob
+        }];
+
+        await set('savedImages', newImage)
+
+        return newImage;
+      }
+      else {
+        const newImage = [{
+          name: handle.name || "simpleedit",
+          handle: handle,
+          preview: this.originalBlob
+        }];
+
+        await set('savedImages',
+          newImage
+        );
+
+        return newImage;
+      }
     }
-    else if (latest && latest.length > 0) {
-     const newImage = [...latest, {
-      name: handle.name || "simpleedit",
-      handle: handle,
-      preview: this.originalBlob
-    }];
-    
-     await set('savedImages', newImage)
- 
-     return newImage;
-   }
     else {
-      const newImage = [{
-       name: handle.name || "simpleedit",
-       handle: handle,
-       preview: this.originalBlob
-     }];
- 
-      await set('savedImages',
-       newImage
-      );
- 
-      return newImage;
+      return;
     }
-   }
-   else {
-     return;
-   }
   }
 
   async openImage() {
@@ -750,9 +855,15 @@ export class AppHome extends LitElement {
 
   async applyWebglFilter(type: string) {
     try {
-      await this.worker.doWebGL(type, this.imageBitmap, this.img?.naturalWidth || 0, this.img?.naturalHeight || 0, 0.6);
+      this.applying = true;
+
+      await this.updateComplete;
+
+      await this.worker.doWebGL(type, this.imageBitmap, this.img?.naturalWidth || 0, this.img?.naturalHeight || 0, this.intensity);
+
+      this.applying = false;
     }
-    catch( err ) { 
+    catch (err) {
       console.error(err);
     }
   }
@@ -771,6 +882,10 @@ export class AppHome extends LitElement {
 
   async saturate() {
     this.applyWebglFilter("saturation");
+  }
+
+  async pixelate() {
+    this.applyWebglFilter("pixelate");
   }
 
   async crop() {
@@ -862,6 +977,65 @@ export class AppHome extends LitElement {
     this.takingPhoto = false;
   }
 
+  async disablePen() {
+    const tempCanvas: HTMLCanvasElement | null | undefined = this.shadowRoot?.querySelector("#drawingCanvas");
+
+    if (tempCanvas) {
+      tempCanvas.toBlob(async (blob) => {
+        this.drawing = false;
+
+        this.imageBlob = blob;
+
+        if (blob) {
+          this.img.onload = async () => {
+            if (this.mainCanvas) {
+              this.imageBitmap = await window.createImageBitmap(this.img);
+
+              this.worker.loadImage(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight);
+
+              this.imageOpened = true;
+            }
+          }
+
+          this.img.src = URL.createObjectURL(blob);
+        }
+      })
+    }
+  }
+
+  async enablePen() {
+    this.applying = true;
+
+    const module = await import("../utils/drawing");
+
+    if (this.mainCanvas) {
+      this.mainCanvas.toBlob(async (blob) => {
+        this.applying = false;
+
+        this.drawing = true;
+
+        await this.updateComplete;
+
+        const drawingCanvas: HTMLCanvasElement | null | undefined = this.shadowRoot?.querySelector("#drawingCanvas");
+
+        const drawingContext = drawingCanvas?.getContext("2d");
+
+        if (drawingCanvas && drawingContext) {
+          await module.enablePen(drawingCanvas, drawingContext, blob);
+        }
+      })
+    }
+  }
+
+  async changeColor(color: string) {
+    const module = await import("../utils/drawing");
+    module.changeColor(color);
+  }
+
+  handleIntensity(value: number) {
+    this.intensity = value;
+  }
+
   render() {
     return html`
     <app-header>
@@ -884,7 +1058,7 @@ export class AppHome extends LitElement {
       ${this.imageOpened ? html`<fast-button id="takePhotoButton" class="headerAction" @click="${() => this.takePhoto()}">
         Take Photo
         <ion-icon name="camera-outline"></ion-icon>
-      </fast-button>` : null }
+      </fast-button>` : null}
     
       <fast-button id="openButton" @click="${() => this.openImage()}">
         Open Image
@@ -906,11 +1080,11 @@ export class AppHome extends LitElement {
       </fast-button>
     </fast-dialog>
 
-    ${this.takingPhoto ? html`<app-camera @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}" @closed="${() => this.closeCamera()}"></app-camera>` : null }
+    ${this.takingPhoto ? html`<app-camera @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}" @closed="${() => this.closeCamera()}"></app-camera>` : null}
     
-      ${this.imageOpened ? html`
+      ${this.imageOpened && this.drawing === false ? html`
 
-      ${this.applying ? html`<fast-progress min="0" max="100"></fast-progress>`: null}
+      ${this.applying ? html`<fast-progress min="0" max="100"></fast-progress>` : null}
 
       <div id="toolbar">
         <div id="fileInfo">
@@ -956,7 +1130,15 @@ export class AppHome extends LitElement {
             polaroid
             <ion-icon name="bulb-outline"></ion-icon>
           </fast-button>
+
+          <fast-button @click="${() => this.pixelate()}">
+            pixelate
+            <ion-icon name="bulb-outline"></ion-icon>
+          </fast-button>
         </div>
+
+        <label id="intensityLabel" for="intensity">Intensity</label>
+        <input type="range" id="intensity" name="intensity" min="-1" max="80" step="0.2" @change="${(e: any) => this.handleIntensity(e.target.value)}" value="40">
 
 
             <div id="dualExtras">
@@ -986,8 +1168,7 @@ export class AppHome extends LitElement {
       ` : null}
 
 
-      ${
-        !this.imageOpened ? html`
+      ${!this.imageOpened ? html`
         <img id="homePhoto" src="/assets/homePhoto.svg">
 
         <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
@@ -1016,6 +1197,30 @@ export class AppHome extends LitElement {
         </drag-drop>
           ` : null}
 
+        ${this.imageOpened && this.drawing === false ? html`
+            <fast-button class="enablePenButton" @click="${() => this.enablePen()}">
+              Enable Drawing (Preview)
+
+              <ion-icon name="brush-outline"></ion-icon>
+            </fast-button>
+          ` : this.imageOpened ? html`
+          <fast-button id="doneButton" @click="${() => this.disablePen()}">
+            Done Drawing
+
+            <ion-icon name="close-outline"></ion-icon>
+          </fast-button>` : null
+      }
+
+      ${this.drawing ? html`<canvas id="drawingCanvas"></canvas>` : null}
+
+      ${this.drawing ? html`<div id="colors">
+        <button @click="${() => this.changeColor("red")}" class="color" id="red"></button>
+        <button @click="${() => this.changeColor("green")}" class="color" id="green"></button>
+        <button @click="${() => this.changeColor("blue")}" class="color" id="blue"></button>
+        <button @click="${() => this.changeColor("yellow")}" class="color" id="yellow"></button>
+        <button @click="${() => this.changeColor("black")}" class="color" id="black"></button>
+      </div>` : null}
+      
       <drag-drop @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}">
         <canvas id="onScreenCanvas"></canvas>
       </drag-drop>

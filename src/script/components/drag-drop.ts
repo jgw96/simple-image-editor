@@ -14,7 +14,7 @@ export class DragDrop extends LitElement {
 
         @media(max-width: 1000px) {
             #dragdrop {
-                height: 90vh;
+                height: 68vh;
             }
         }
 
