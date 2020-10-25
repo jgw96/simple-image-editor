@@ -35,7 +35,8 @@ export default {
         '*.js',
         '*.html',
         'assets/**',
-        'manifest.json'
+        'manifest.json',
+        'comlink**'
       ]
     }),
   ]
