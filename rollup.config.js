@@ -34,7 +34,8 @@ export default {
         '**/*/*.svg',
         '*.js',
         '*.html',
-        'assets/**'
+        'assets/**',
+        'manifest.json'
       ]
     }),
   ]
