@@ -23,6 +23,7 @@
     "lit-element": "^2.3.1",
     "lodash-es": "^4.17.15",
     "pinch-zoom-element": "^1.1.1",
+    "pointer-tracker": "^2.4.0",
     "wasm-imagemagick": "^1.2.8"
   },
   "devDependencies": {
