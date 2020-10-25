@@ -18,7 +18,7 @@ async function shareTargetHandler({ event }) {
 
 workbox.routing.registerRoute(
   ({url}) => url.href.includes("comlink"),
-  new StaleWhileRevalidate(),
+  new workbox.strategies.CacheFirst(),
 );
 
 workbox.routing.registerRoute(
