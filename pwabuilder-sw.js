@@ -7,13 +7,22 @@ self.addEventListener("message", (event) => {
 });
 
 async function shareTargetHandler({ event }) {
-  const data = await event.request.formData();
+  console.log(event);
   const client = await self.clients.get(event.resultingClientId || event.clientId);
-  // Get the data from the named element 'file'
-  const file = data.get('file');
 
-  console.log('file', file);
-  client.postMessage({ file, action: 'load-image' });
+  const formData = await event.request.formData();
+  const mediaFiles = formData.getAll('media');
+
+  for (const mediaFile of mediaFiles) {
+    // Do something with mediaFile
+    // Maybe cache it or post it back to a server
+
+    console.log('file', mediaFile);
+    client.postMessage(mediaFile);
+  };
+
+  // Do something with the rest of formData as you need
+  // Maybe save it to IndexedDB
 };
 
 workbox.routing.registerRoute(
@@ -28,4 +37,4 @@ workbox.routing.registerRoute(
 );
 
 
-workbox.precaching.precacheAndRoute(self.__WB_MANIFEST)
+// workbox.precaching.precacheAndRoute(self.__WB_MANIFEST)

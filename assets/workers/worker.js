@@ -6,6 +6,9 @@ importScripts("/assets/filters/webgl.js");
 let offscreenContext = null;
 let canvas = null;
 
+let orgWidth = null;
+let orgHeight = null;
+
 onmessage = function (evt) {
   if (evt.data.canvas) {
     canvas = evt.data.canvas;
@@ -26,8 +29,8 @@ const obj = {
       this.filter.addFilter(type);
     }
 
-    canvas.width = width;
-    canvas.height = height;
+    /*canvas.width = width;
+    canvas.height = height;*/
 
     // offscreenContext.drawImage(canvasImage, 0, 0, width, height);
 
@@ -42,10 +45,43 @@ const obj = {
   },
 
   drawImage(image, width, height) {
-    canvas.width = width;
-    canvas.height = height;
+    orgWidth = width;
+    orgHeight = height;
 
-    offscreenContext.drawImage(image, 0, 0, width, height, 0, 0, canvas.width, canvas.height);
+    offscreenContext.clearRect(0, 0, canvas.width, canvas.height);
+
+    const imageAspectRatio = image.width / image.height;
+    const canvasAspectRatio = canvas.width / canvas.height;
+
+    let renderableHeight, renderableWidth, xStart, yStart;
+
+    // If image's aspect ratio is less than canvas's we fit on height
+    // and place the image centrally along width
+    if (imageAspectRatio < canvasAspectRatio) {
+      renderableHeight = canvas.height;
+      renderableWidth = image.width * (renderableHeight / image.height);
+      xStart = (canvas.width - renderableWidth) / 2;
+      yStart = 0;
+    }
+
+    // If image's aspect ratio is greater than canvas's we fit on width
+    // and place the image centrally along height
+    else if (imageAspectRatio > canvasAspectRatio) {
+      renderableWidth = canvas.width
+      renderableHeight = image.height * (renderableWidth / image.width);
+      xStart = 0;
+      yStart = (canvas.height - renderableHeight) / 2;
+    }
+
+    // Happy path - keep aspect ratio
+    else {
+      renderableHeight = canvas.height;
+      renderableWidth = canvas.width;
+      xStart = 0;
+      yStart = 0;
+    }
+
+    offscreenContext.drawImage(image, xStart, yStart, renderableWidth, renderableHeight);
   },
 
   loadImage(imageData, width, height) {
@@ -69,15 +105,8 @@ const obj = {
     a.readAsDataURL(blob);
   },
 
-  async doAI(imageData, width, height) {
-    this.offscreen.width = width;
-    this.offscreen.height = height;
-
-    offscreenContext = this.offscreen.getContext("2d");
-
-    offscreenContext.drawImage(imageData, 0, 0, width, height);
-
-    const blob = await this.offscreen.convertToBlob();
+  async doAI() {
+    const blob = await canvas.convertToBlob();
 
     return new Promise((resolve, reject) => {
       this.blobToDataURL(blob, async (dataURL) => {
@@ -94,7 +123,7 @@ const obj = {
         let data = null;
 
         try {
-          const response = await fetch(`https://westus2.api.cognitive.microsoft.com/vision/v3.0/generateThumbnail?width=400&height=400&smartCropping=true`, {
+          const response = await fetch(`https://westus2.api.cognitive.microsoft.com/vision/v3.1/generateThumbnail?width=200&height=200&smartCropping=true`, {
             headers: {
               "Ocp-Apim-Subscription-Key": "d930861b5bba49e5939b843f9c4e5846",
               "Content-Type": "application/octet-stream"
@@ -104,14 +133,12 @@ const obj = {
           });
           data = await response.blob();
 
-          console.log(data);
-
           if (data.type !== "application/json") {
             resolve(data);
           }
 
         } catch (error) {
-          console.error(error);
+          console.error(error, error.message);
           reject(error);
         }
       })
