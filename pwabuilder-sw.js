@@ -18,7 +18,9 @@ async function shareTargetHandler({ event }) {
     // Maybe cache it or post it back to a server
 
     console.log('file', mediaFile);
-    client.postMessage(mediaFile);
+    event.waitUntil(
+      client.openWindow("/")
+    );
   };
 
   // Do something with the rest of formData as you need
@@ -31,7 +33,7 @@ workbox.routing.registerRoute(
 );
 
 workbox.routing.registerRoute(
-  '/',
+  '/share/image/',
   shareTargetHandler,
   'POST'
 );
