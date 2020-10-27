@@ -8,9 +8,9 @@ self.addEventListener("message", (event) => {
 
 async function shareTargetHandler({ event }) {
   console.log(event);
-  event.respondWith(Response.redirect('/share/image/'));
-  
   event.waitUntil(async function () {
+    event.respondWith(Response.redirect('/'));
+
     const data = await event.request.formData();
     const client = await self.clients.get(event.resultingClientId || event.clientId);
     // Get the data from the named element 'file'
