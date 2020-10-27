@@ -8,32 +8,29 @@ self.addEventListener("message", (event) => {
 
 async function shareTargetHandler({ event }) {
   console.log(event);
-  const client = await self.clients.get(event.resultingClientId || event.clientId);
+  event.respondWith(Response.redirect('/share/image/'));
+  
+  event.waitUntil(async function () {
+    const data = await event.request.formData();
+    const client = await self.clients.get(event.resultingClientId || event.clientId);
+    // Get the data from the named element 'file'
+    const file = data.get('file');
 
-  const formData = await event.request.formData();
-  const mediaFiles = formData.getAll('media');
-
-  for (const mediaFile of mediaFiles) {
-    // Do something with mediaFile
-    // Maybe cache it or post it back to a server
-
-    console.log('file', mediaFile);
-    event.waitUntil(
-      client.openWindow("/")
-    );
-  };
+    console.log('file', file);
+    client.postMessage({ file, action: 'load-image' });
+  }());
 
   // Do something with the rest of formData as you need
   // Maybe save it to IndexedDB
 };
 
 workbox.routing.registerRoute(
-  ({url}) => url.href.includes("comlink"),
+  ({ url }) => url.href.includes("comlink"),
   new workbox.strategies.CacheFirst(),
 );
 
 workbox.routing.registerRoute(
-  '/share/image/',
+  '/',
   shareTargetHandler,
   'POST'
 );
