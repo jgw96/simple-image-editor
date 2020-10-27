@@ -30,7 +30,7 @@ workbox.routing.registerRoute(
 );
 
 workbox.routing.registerRoute(
-  '/',
+  '/share/image/',
   shareTargetHandler,
   'POST'
 );
