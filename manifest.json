@@ -67,14 +67,20 @@
     }
   ],
   "share_target": {
-    "action": "/",
+    "action": "/share/image/",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {
+      "title": "name",
+      "text": "description",
       "files": [
         {
-          "name": "externalMedia",
-          "accept": ["image/jpeg", "image/png"]
+          "name": "photos",
+          "accept": [
+            "image/jpeg",
+            ".png",
+            ".jpg"
+          ]
         }
       ]
     }
@@ -83,8 +89,12 @@
     {
       "action": "/",
       "accept": {
-        "image/*": [".png", ".jpg"]
+        "image/*": [
+          ".png",
+          ".jpg"
+        ]
       }
     }
-  ]
+  ],
+  "scope": "/"
 }

@@ -567,12 +567,25 @@ export class AppHome extends LitElement {
     this.mainCanvas = (this.shadowRoot?.querySelector('#onScreenCanvas') as HTMLCanvasElement);
     this.resizeCanvas();
 
-    let offscreen = this.mainCanvas.transferControlToOffscreen();
+    if (window.OffscreenCanvas) {
+      let offscreen = this.mainCanvas.transferControlToOffscreen();
 
-    const underlying = new Worker("/assets/workers/worker.js");
-    underlying.postMessage({ canvas: offscreen }, [offscreen]);
+      const underlying = new Worker("/assets/workers/worker.js");
+      underlying.postMessage({ canvas: offscreen }, [offscreen]);
 
-    this.worker = Comlink.wrap(underlying);
+      this.worker = Comlink.wrap(underlying);
+    }
+    else {
+      this.worker = await import('../utils/onscreen-polyfill');
+      console.log('this.worker', this.worker);
+
+      if (this.worker) {
+        console.log('initiing');
+
+        const mainContext = this.mainCanvas.getContext("2d");
+        this.worker.init(this.mainCanvas, mainContext);
+      }
+    }
   }
 
   async firstUpdated() {
@@ -854,13 +867,13 @@ export class AppHome extends LitElement {
     this.img.src = URL.createObjectURL(blob);
   }
 
-  async applyWebglFilter(type: string) {
+  async applyWebglFilter(type: string, intensity?: number) {
     try {
       this.applying = true;
 
       await this.updateComplete;
 
-      await this.worker.doWebGL(type, this.imageBitmap, this.img?.naturalWidth || 0, this.img?.naturalHeight || 0, this.intensity);
+      await this.worker.doWebGL(type, this.imageBitmap, this.img?.naturalWidth || 0, this.img?.naturalHeight || 0, intensity ? intensity : this.intensity);
 
       this.applying = false;
     }
@@ -886,20 +899,46 @@ export class AppHome extends LitElement {
   }
 
   async pixelate() {
-    this.applyWebglFilter("pixelate");
+    this.applyWebglFilter("pixelate", 40);
   }
 
   async crop() {
+    this.applying = true;
+
     const canvasData = this.mainCanvas?.toDataURL();
 
-    const blob = await this.worker.doAI(canvasData);
+    try {
+      const blob = await this.worker.doAI(canvasData);
 
-    if (blob) {
-      await fileSave(blob, {
-        fileName: 'Untitled.png',
-        extensions: ['.png'],
-      });
+      if (blob) {
+        /*await fileSave(blob, {
+          fileName: 'Untitled.png',
+          extensions: ['.png'],
+        });*/
+        console.log('got blob', blob);
+        const img = new Image();
+
+        img.onload = async () => {
+          if (this.mainCanvas) {
+
+            console.log('in here');
+
+            this.imageBitmap = await window.createImageBitmap(img);
+
+            this.worker.loadImage(this.imageBitmap, img.naturalWidth, img.naturalHeight);
+
+            this.imageOpened = true;
+          }
+        }
+
+        img.src = URL.createObjectURL(blob);
+      }
     }
+    catch (err) {
+      console.error(err, err.message);
+    }
+
+    this.applying = false;
   }
 
   async rotate() {
@@ -925,20 +964,6 @@ export class AppHome extends LitElement {
 
       this.img.src = URL.createObjectURL(blob1);
     })
-  }
-
-  async smartCrop() {
-    this.applying = true;
-
-    /*if (this.mainImg) {
-      const blob = await this.worker.doAI(await window.createImageBitmap(this.mainImg), this.mainImg.naturalWidth, this.mainImg.naturalHeight);
-
-      if (blob) {
-        this.writeImage(blob);
-      }
-    }*/
-
-    this.applying = false;
   }
 
   async revert() {
@@ -1041,7 +1066,7 @@ export class AppHome extends LitElement {
     return html`
     <app-header>
 
-    ${this.imageOpened ? html`<fast-button class="headerAction" id="shareButton" @click="${() => this.shareImage()}">
+    ${this.imageOpened && (navigator as any).canShare ? html`<fast-button class="headerAction" id="shareButton" @click="${() => this.shareImage()}">
         Share
         <ion-icon name="share-outline"></ion-icon>
       </fast-button>` : null}
@@ -1056,7 +1081,7 @@ export class AppHome extends LitElement {
         <ion-icon name="save-outline"></ion-icon>
       </fast-button>` : null}
 
-      ${this.imageOpened ? html`<fast-button id="takePhotoButton" class="headerAction" @click="${() => this.takePhoto()}">
+      ${this.imageOpened && (window as any).ImageCapture ? html`<fast-button id="takePhotoButton" class="headerAction" @click="${() => this.takePhoto()}">
         Take Photo
         <ion-icon name="camera-outline"></ion-icon>
       </fast-button>` : null}
@@ -1108,7 +1133,7 @@ export class AppHome extends LitElement {
           </fast-button>
       
           <fast-button @click="${() => this.enhance()}">
-            brighten
+            brightness
             <ion-icon name="sunny-outline"></ion-icon>
           </fast-button>
 
@@ -1136,18 +1161,24 @@ export class AppHome extends LitElement {
             pixelate
             <ion-icon name="bulb-outline"></ion-icon>
           </fast-button>
+
+          <fast-button @click="${() => this.crop()}">
+            Smart Crop
+
+            <ion-icon name="crop-outline"></ion-icon>
+          </fast-button>
         </div>
 
         <label id="intensityLabel" for="intensity">Intensity</label>
-        <input type="range" id="intensity" name="intensity" min="-1" max="80" step="0.2" @change="${(e: any) => this.handleIntensity(e.target.value)}" value="40">
+        <input type="range" id="intensity" name="intensity" min="-1" max="1" step="0.1" @change="${(e: any) => this.handleIntensity(e.target.value)}" value="1">
 
 
             <div id="dualExtras">
 
-              <fast-button @click="${() => this.shareImage()}">
+              ${(navigator as any).canShare ? html`<fast-button @click="${() => this.shareImage()}">
                 Share
                 <ion-icon name="share-outline"></ion-icon>
-              </fast-button>
+              </fast-button>` : null}
 
               <fast-button @click="${() => this.revert()}">
                 Revert
@@ -1159,10 +1190,10 @@ export class AppHome extends LitElement {
                 <ion-icon name="save-outline"></ion-icon>
               </fast-button>
 
-              <fast-button id="dualTakePhoto" @click="${() => this.takePhoto()}">
+              ${(window as any).ImageCapture ? html`<fast-button id="dualTakePhoto" @click="${() => this.takePhoto()}">
                 Take Photo
                 <ion-icon name="camera-outline"></ion-icon>
-              </fast-button>
+              </fast-button>` : null}
               
             </div>
       </div>
@@ -1181,10 +1212,10 @@ export class AppHome extends LitElement {
                   </p>
 
                   <div id="welcomeActions">
-                    <fast-button id="welcomePhotoButton" @click="${() => this.takePhoto()}">
+                    ${(window as any).ImageCapture ? html`<fast-button id="welcomePhotoButton" @click="${() => this.takePhoto()}">
                       Take Photo
                       <ion-icon name="camera-outline"></ion-icon>
-                    </fast-button>
+                    </fast-button>` : null}
 
                     <fast-button appearance="primary" id="openButton" @click="${() => this.openImage()}">
                       Open Image
