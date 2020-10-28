@@ -95,6 +95,7 @@ export class AppHome extends LitElement {
       position: absolute;
       bottom: 16px;
       left: 16px;
+      z-index: 1;
 
       animation-name: quickup;
       animation-duration: 300ms;
@@ -234,7 +235,9 @@ export class AppHome extends LitElement {
       }
 
       #drawingCanvas {
-       
+        touch-action: none;
+        position: absolute;
+        inset: 0px;
       }
 
       #imageWrapper {
@@ -688,8 +691,6 @@ export class AppHome extends LitElement {
       const request = await handle.requestPermission({
         writable: true
       })
-
-      console.log(request);
 
       if (request === "granted") {
         const blob = await handle.getFile();

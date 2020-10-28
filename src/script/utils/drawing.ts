@@ -30,7 +30,7 @@ export async function enablePen(drawingCanvas: HTMLCanvasElement, drawingContext
     image1.src = URL.createObjectURL(imageBlob);
   }
 
-  const module = await import("pointer-tracker");
+  const module = await import("./PointerTracker");
   const PointerTracker = module.default;
 
   new PointerTracker(drawingCanvas, {
