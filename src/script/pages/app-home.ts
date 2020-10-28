@@ -238,6 +238,7 @@ export class AppHome extends LitElement {
         touch-action: none;
         position: absolute;
         inset: 0px;
+        background: var(--background-color);
       }
 
       #imageWrapper {
