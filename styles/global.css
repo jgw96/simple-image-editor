@@ -17,3 +17,19 @@ html, body {
   overflow-y: hidden;
   background: #181818;
 }
+
+fast-design-system-provider {
+  --background-color: #181818;
+}
+
+@media(prefers-color-scheme: light) {
+  fast-design-system-provider {
+    --background-color: #ececec;
+    --app-color-primary: #3e79d4;
+    color: black;
+  }
+
+  html, body {
+    background: #ececec;
+  }
+}

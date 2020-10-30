@@ -203,13 +203,27 @@ export class AppHome extends LitElement {
         justify-content: flex-end;
       }
 
+      @media(prefers-color-scheme: light) {
+        #toolbar {
+          background: var(--app-color-primary);
+          color: white;
+        }
+      }
+
       #toolbar fast-button, app-header fast-button, #welcome fast-button {
         margin-left: 6px;
       }
+
       pwa-install {
         position: absolute;
         bottom: 16px;
         right: 16px;
+      }
+
+      @media(prefers-color-scheme: dark) {
+        pwa-install {
+          --modal-background-color: var(--app-color-primary);
+        }
       }
 
       @media(max-width: 1000px) {
@@ -559,6 +573,35 @@ export class AppHome extends LitElement {
           transform: translateY(0);
         }
       }
+
+      @media(prefers-color-scheme: light) {
+        app-header #shareButton::part(control), app-header #revertButton::part(control), app-header #takePhotoButton::part(control), .enablePenButton::part(control) {
+          background: #e6e6e6;
+          color: var(--app-color-secondary);
+        }
+
+        #dualExtras fast-button::part(control) {
+          background: #e6e6e6;
+          color: var(--app-color-secondary);
+        }
+
+                  
+        #toolbarActions fast-button::part(control) {
+          background: #e6e6e6;
+          color: var(--app-color-secondary);
+        }
+
+        #onScreenCanvas {
+          background: #ececec;
+        }
+      }
+
+      @media(max-width: 454px) {
+        .enablePenButton {
+          display: none;
+        }
+      }
+
     `;
   }
 
