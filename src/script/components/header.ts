@@ -26,7 +26,7 @@ export class AppHeader extends LitElement {
         margin-bottom: 0;
         font-size: 18px;
         font-weight: bold;
-        z-index: 999;
+        z-index: 1;
       }
 
       header div {

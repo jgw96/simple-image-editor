@@ -58,6 +58,7 @@ export class AppHome extends LitElement {
       backdrop-filter: blur(10px);
       border-radius: 4px;
       padding: 8px;
+      z-index: 3;
 
       animation-name: quickup;
       animation-duration: 300ms;
@@ -95,7 +96,7 @@ export class AppHome extends LitElement {
       position: absolute;
       bottom: 16px;
       left: 16px;
-      z-index: 1;
+      z-index: 3;
 
       animation-name: quickup;
       animation-duration: 300ms;
@@ -239,6 +240,7 @@ export class AppHome extends LitElement {
         position: absolute;
         inset: 0px;
         background: var(--background-color);
+        z-index: 2;
       }
 
       #imageWrapper {
@@ -339,8 +341,9 @@ export class AppHome extends LitElement {
         }
 
         .enablePenButton {
-          bottom: 13.4em;
-          left: 1.4em;
+          top: 5em;
+          bottom: initial;
+          left: 6px;
         }
       }
 
@@ -349,10 +352,9 @@ export class AppHome extends LitElement {
           display: initial;
           justify-content: initial;
           z-index: 1;
-        }
 
-        .enablePenButton {
-          display: none;
+          animation-name: slideup;
+          animation-duration: 300ms;
         }
 
         #toolbarActions {
@@ -900,7 +902,7 @@ export class AppHome extends LitElement {
   }
 
   async pixelate() {
-    this.applyWebglFilter("pixelate", 40);
+    this.applyWebglFilter("pixelate", 20);
   }
 
   async crop() {
@@ -1045,7 +1047,9 @@ export class AppHome extends LitElement {
 
         const drawingCanvas: HTMLCanvasElement | null | undefined = this.shadowRoot?.querySelector("#drawingCanvas");
 
-        const drawingContext = drawingCanvas?.getContext("2d");
+        const drawingContext = drawingCanvas?.getContext("2d", {
+          desynchronized: true
+        });
 
         if (drawingCanvas && drawingContext) {
           await module.enablePen(drawingCanvas, drawingContext, blob);

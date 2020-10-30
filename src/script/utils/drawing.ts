@@ -1,7 +1,7 @@
 let color = "black";
 let globalDrawingContext: CanvasRenderingContext2D | null = null;
 
-export async function changeColor( colorChosen: string) {
+export async function changeColor(colorChosen: string) {
   console.log("colorChosen", colorChosen);
   color = colorChosen;
 
@@ -43,17 +43,34 @@ export async function enablePen(drawingCanvas: HTMLCanvasElement, drawingContext
       changedPointers.forEach((pointer: any) => {
         const previous = previousPointers.find((p: any) => p.id === pointer.id);
 
-        drawingContext.beginPath();
+        if ((pointer.nativePointer as PointerEvent).buttons === 32 && (pointer.nativePointer as PointerEvent).button === -1) {
+          // eraser button on pen
 
-        if (previous) {
-          drawingContext.moveTo(previous.clientX, previous.pageY);
+          drawingContext.globalCompositeOperation = 'destination-out';
+          drawingContext.beginPath();
+          drawingContext.moveTo(previous.clientX, previous.clientY);
+          for (const point of pointer.getCoalesced()) {
+            drawingContext.lineTo(point.clientX, point.clientY);
+          }
+          drawingContext.stroke();
+        }
+        else {
+          // drawing
+          drawingContext.globalCompositeOperation = 'source-over';
+
+          drawingContext.beginPath();
+
+          if (previous) {
+            drawingContext.moveTo(previous.clientX, previous.pageY);
+          }
+
+          for (const point of pointer.getCoalesced()) {
+            console.log(point);
+            drawingContext.lineTo(point.clientX, point.clientY);
+          }
+          drawingContext.stroke();
         }
 
-        for (const point of pointer.getCoalesced()) {
-          console.log(point);
-          drawingContext.lineTo(point.clientX, point.clientY);
-        }
-        drawingContext.stroke();
       })
     }
   });
