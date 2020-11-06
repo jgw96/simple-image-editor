@@ -75,7 +75,7 @@
       "text": "description",
       "files": [
         {
-          "name": "photos",
+          "name": "file",
           "accept": [
             "image/jpeg",
             ".png",

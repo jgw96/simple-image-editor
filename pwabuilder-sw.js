@@ -7,11 +7,12 @@ self.addEventListener("message", (event) => {
 });
 
 async function shareTargetHandler({ event }) {
-  console.log(event);
+  event.respondWith(Response.redirect("/"));
+
   event.waitUntil(async function () {
-    event.respondWith(Response.redirect('/'));
 
     const data = await event.request.formData();
+    console.log('data', data);
     const client = await self.clients.get(event.resultingClientId || event.clientId);
     // Get the data from the named element 'file'
     const file = data.get('file');
@@ -36,4 +37,4 @@ workbox.routing.registerRoute(
 );
 
 
-workbox.precaching.precacheAndRoute(self.__WB_MANIFEST)
+// workbox.precaching.precacheAndRoute(self.__WB_MANIFEST)

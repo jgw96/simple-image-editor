@@ -26,9 +26,14 @@ export class AppHome extends LitElement {
   @internalProperty() latest: any[] | null | undefined = null;
   @internalProperty() applying: boolean = false;
   @internalProperty() handlingShortcut: boolean = false;
+  @internalProperty() handlingCrop: boolean = false;
   @internalProperty() takingPhoto: boolean = false;
   @internalProperty() drawing: boolean = false;
   @internalProperty() intensity: number = 0.99;
+  @internalProperty() cropHeight: number = 400;
+  @internalProperty() cropWidth: number = 400;
+  @internalProperty() cropPreview: Blob | undefined;
+  @internalProperty() collapsed: boolean = false;
 
   mainCanvas: HTMLCanvasElement | undefined;
   mainCanvasContext: CanvasRenderingContext2D | undefined;
@@ -39,6 +44,47 @@ export class AppHome extends LitElement {
 
   static get styles() {
     return css`
+
+    #collapseContainer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .cropSubmit {
+      margin-left: 12px;
+    }
+
+    #cropDone, #cropSmart {
+      background: rgb(92, 46, 145);
+    }
+
+    #cropActions {
+      margin-top: 1.2em;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    #cropDialog fast-text-field {
+      margin-top: 10px;
+    }
+
+    #cropDialog img {
+      width: 100%;
+      max-height: 10em;
+      object-fit: contain;
+    }
+
+    #cropDialogHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #cropDialogHeader fast-button::part(control) {
+      font-size: 1.4em;
+    }
 
     #intensityLabel {
       font-weight: bold;
@@ -114,11 +160,27 @@ export class AppHome extends LitElement {
       contain: content;
     }
 
+    fast-dialog {
+      
+    }
+
+    @media(screen-spanning: single-fold-vertical) {
+        fast-dialog::part(positioning-region) {
+          left: calc(env(fold-left) + 34px);
+          padding: 5% !important;
+        }
+      }
+
     fast-dialog::part(positioning-region) {
       z-index: 9999;
-      padding: 15%;
       background: #181818ab;
       backdrop-filter: blur(10px);
+    }
+
+    @media(max-width: 800px) {
+      fast-dialog::part(positioning-region) {
+        padding: 15%;
+      }
     }
 
     fast-dialog::part(control) {
@@ -309,6 +371,10 @@ export class AppHome extends LitElement {
           margin-left: 12em;
         }
 
+        #collapseButton {
+          display: none;
+        }
+
         #toolbarActions {
           flex-direction: column;
           display: flex;
@@ -344,7 +410,7 @@ export class AppHome extends LitElement {
           padding-right: 35%;
         }
 
-        fast-dialog::part(control) {
+        #shortcutDialog::part(control) {
           padding-bottom: 3em;
         }
       }
@@ -371,10 +437,23 @@ export class AppHome extends LitElement {
           animation-duration: 300ms;
         }
 
+
+        #collapseButton {
+          display: flex;
+          height: 1.2em;
+        }
+
+        #collapseButton::part(control) {
+          font-size: 1.4em;
+        }
+
         #toolbarActions {
           display: grid;
           grid-template-columns: auto auto auto;
           margin-bottom: 1em;
+
+          animation-name: quickup;
+          animation-duration: 240ms;
         }
 
         #toolbar fast-button {
@@ -949,6 +1028,10 @@ export class AppHome extends LitElement {
   }
 
   async crop() {
+    this.handlingCrop = !this.handlingCrop;
+  }
+
+  async smartCrop() {
     this.applying = true;
 
     const canvasData = this.mainCanvas?.toDataURL();
@@ -957,10 +1040,6 @@ export class AppHome extends LitElement {
       const blob = await this.worker.doAI(canvasData);
 
       if (blob) {
-        /*await fileSave(blob, {
-          fileName: 'Untitled.png',
-          extensions: ['.png'],
-        });*/
         console.log('got blob', blob);
         const img = new Image();
 
@@ -984,6 +1063,18 @@ export class AppHome extends LitElement {
       console.error(err, err.message);
     }
 
+    this.applying = false;
+    this.handlingCrop = !this.handlingCrop;
+  }
+
+  async manualCrop() {
+    console.log(this.cropHeight, this.cropWidth);
+
+    // this.handlingCrop = false;
+    this.cropPreview = undefined;
+
+    this.applying = true;
+    this.cropPreview = await this.worker.doManualCrop(this.imageBitmap, this.img.naturalWidth, this.img.naturalHeight, this.cropWidth, this.cropHeight);
     this.applying = false;
   }
 
@@ -1014,6 +1105,14 @@ export class AppHome extends LitElement {
 
   async revert() {
     this.handleSharedImage((this.originalBlob as Blob));
+  }
+
+  async cropReset() {
+    await this.revert();
+
+    this.cropPreview = undefined;
+
+    this.handlingCrop = false;
   }
 
   formatBytes(bytes: any, decimals = 2) {
@@ -1110,6 +1209,25 @@ export class AppHome extends LitElement {
     this.intensity = value;
   }
 
+  handleHeight(value: number) {
+    console.log('value', value);
+    this.cropHeight = value;
+  }
+
+  handleWidth(value: number) {
+    console.log('value', value);
+    this.cropWidth = value;
+  }
+
+  close() {
+    this.cropPreview = undefined;
+    this.handlingCrop = !this.handlingCrop;
+  }
+
+  collapse() {
+    this.collapsed = !this.collapsed;
+  }
+
   render() {
     return html`
     <app-header>
@@ -1143,8 +1261,8 @@ export class AppHome extends LitElement {
     
     <div>
 
-    <fast-dialog id="example1" aria-label="Simple modal dialog" modal="true" ?hidden="${!this.handlingShortcut}">
-      <h2>Choose an Image</h2>
+    <fast-dialog id="shortcutDialog" aria-label="Simple modal dialog" modal="true" ?hidden="${!this.handlingShortcut}">
+      <h2>Choose</h2>
 
       <p>Choose an image to start editing.</p>
 
@@ -1153,6 +1271,47 @@ export class AppHome extends LitElement {
         <ion-icon name="image-outline"></ion-icon>
       </fast-button>
     </fast-dialog>
+
+    ${this.handlingCrop ? html`<fast-dialog id="cropDialog" aria-label="Simple modal dialog" modal="true" ?hidden="${!this.handlingCrop}">
+      <div id="cropDialogHeader">
+        <h2>Crop</h2>
+
+        <fast-button appearance="lightweight" @click="${() => this.close()}">
+              <ion-icon name="close-outline"></ion-icon>
+            </fast-button>
+      </div>
+
+      <p>Choose the size you would like to crop to.</p>
+
+      ${this.cropPreview ? html`<img src="${URL.createObjectURL(this.cropPreview)}">` : null}
+
+      <fast-text-field @change="${(el: any) => this.handleHeight(el.target.value)}" appearance="filled" placeholder="400">Height</fast-text-field>
+      <fast-text-field @change="${(el: any) => this.handleWidth(el.target.value)}" appearance="filled" placeholder="400">Width</fast-text-field>
+
+      <div id="cropActions">
+        <fast-button class="cropSubmit" @click="${() => this.manualCrop()}">
+          Preview Manual Crop
+          <ion-icon name="crop-outline"></ion-icon>
+        </fast-button>
+
+        ${!this.cropPreview ? html`<fast-button class="cropSubmit" id="cropSmart" @click="${() => this.smartCrop()}">
+            AI Crop
+
+            <ion-icon name="crop-outline"></ion-icon>
+        </fast-button>` : null}
+
+        ${this.cropPreview ? html`<fast-button class="cropSubmit" @click="${() => this.cropReset()}">
+          Reset
+          <ion-icon name="crop-outline"></ion-icon>
+        </fast-button>` : null}
+
+        ${this.cropPreview ? html`<fast-button class="cropSubmit" id="cropDone" @click="${() => this.close()}">
+          Done
+          <ion-icon name="crop-outline"></ion-icon>
+        </fast-button>` : null}
+      </div>
+
+    </fast-dialog>` : null}
 
     ${this.takingPhoto ? html`<app-camera @got-file="${(event: any) => this.handleSharedImage(event.detail.file)}" @closed="${() => this.closeCamera()}"></app-camera>` : null}
     
@@ -1169,7 +1328,13 @@ export class AppHome extends LitElement {
           <p>Size: ${this.imageBlob ? this.formatBytes((this.imageBlob as File).size) : null}</p>
         </div>
 
-        <div id="toolbarActions">
+        <div id="collapseContainer">
+          <fast-button appearance="lightweight" id="collapseButton" @click="${() => this.collapse()}">
+            ${!this.collapsed ? html`<ion-icon name="arrow-down"></ion-icon>` : html`<ion-icon name="arrow-up"></ion-icon>`}
+          </fast-button>
+        </div>
+
+        ${!this.collapsed ? html`<div id="toolbarActions">
           <fast-button @click="${() => this.invert()}">
             invert
             <ion-icon name="partly-sunny-outline"></ion-icon>
@@ -1211,14 +1376,14 @@ export class AppHome extends LitElement {
           </fast-button>
 
           <fast-button @click="${() => this.crop()}">
-            Smart Crop
+            Crop
 
             <ion-icon name="crop-outline"></ion-icon>
           </fast-button>
         </div>
 
         <label id="intensityLabel" for="intensity">Intensity</label>
-        <input type="range" id="intensity" name="intensity" min="-1" max="1" step="0.1" @change="${(e: any) => this.handleIntensity(e.target.value)}" value="1">
+        <input type="range" id="intensity" name="intensity" min="-1" max="1" step="0.1" @change="${(e: any) => this.handleIntensity(e.target.value)}" value="1">` : null}
 
 
             <div id="dualExtras">

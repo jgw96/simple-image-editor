@@ -105,6 +105,18 @@ const obj = {
     a.readAsDataURL(blob);
   },
 
+  async doManualCrop(image, initialWidth, initialHeight, width, height) {
+    offscreenContext.clearRect(0, 0, canvas.width, canvas.height);
+
+    /*offscreenContext.drawImage(image, 0, 0, initialWidth, initialHeight, 
+      0, 0, width, height);*/
+
+    offscreenContext.drawImage(image, 0, 0, width, height,
+      0, 0, initialWidth, initialHeight);
+
+    return canvas.convertToBlob();
+  },
+
   async doAI() {
     const blob = await canvas.convertToBlob();
 
