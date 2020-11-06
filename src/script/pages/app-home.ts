@@ -715,7 +715,6 @@ export class AppHome extends LitElement {
     this.init();
 
     navigator.serviceWorker.addEventListener('message', (event) => {
-      alert("file event");
       console.log('file event', event);
       console.log('file event data', event.data);
       const imageBlob = event.data.file;
