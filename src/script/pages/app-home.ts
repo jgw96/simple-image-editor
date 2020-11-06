@@ -10,8 +10,6 @@ import '../components/drag-drop';
 import '../components/camera';
 
 
-// For more info on the @pwabuilder/pwainstall component click here https://github.com/pwa-builder/pwa-install
-import '@pwabuilder/pwainstall';
 import { clear, get, set } from 'idb-keyval';
 
 @customElement('app-home')
@@ -716,7 +714,7 @@ export class AppHome extends LitElement {
   async firstUpdated() {
     this.init();
 
-    navigator.serviceWorker.onmessage = (event) => {
+    navigator.serviceWorker.addEventListener('message', (event) => {
       console.log('file event', event);
       console.log('file event data', event.data);
       const imageBlob = event.data.file;
@@ -724,7 +722,7 @@ export class AppHome extends LitElement {
       if (imageBlob) {
         this.handleSharedImage(imageBlob);
       }
-    };
+    });
 
     this.fileHandler();
 
@@ -1470,7 +1468,7 @@ export class AppHome extends LitElement {
         <canvas id="onScreenCanvas"></canvas>
       </drag-drop>
 
-      <pwa-install>Install SimpleEdit</pwa-install>
+      <!--<pwa-install>Install SimpleEdit</pwa-install>-->
     </div>
   `
   }
