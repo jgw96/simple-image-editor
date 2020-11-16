@@ -263,13 +263,6 @@ export class AppHome extends LitElement {
         justify-content: flex-end;
       }
 
-      @media(prefers-color-scheme: light) {
-        #toolbar {
-          background: var(--app-color-primary);
-          color: white;
-        }
-      }
-
       #toolbar fast-button, app-header fast-button, #welcome fast-button {
         margin-left: 6px;
       }
@@ -648,28 +641,6 @@ export class AppHome extends LitElement {
 
         to {
           transform: translateY(0);
-        }
-      }
-
-      @media(prefers-color-scheme: light) {
-        app-header #shareButton::part(control), app-header #revertButton::part(control), app-header #takePhotoButton::part(control), .enablePenButton::part(control) {
-          background: #e6e6e6;
-          color: var(--app-color-secondary);
-        }
-
-        #dualExtras fast-button::part(control) {
-          background: #e6e6e6;
-          color: var(--app-color-secondary);
-        }
-
-                  
-        #toolbarActions fast-button::part(control) {
-          background: #e6e6e6;
-          color: var(--app-color-secondary);
-        }
-
-        #onScreenCanvas {
-          background: #ececec;
         }
       }
 
