@@ -706,7 +706,7 @@ export class AppHome extends LitElement {
       const URLToImage = new URL(location.href).searchParams.get("url");
 
       if (URLToImage) {
-        const response = await fetch(URLToImage, {
+        const response = await fetch(URLToImage.split("web+simpleedit://")[1], {
           method: "GET"
         });
         const blob = await response.blob();
