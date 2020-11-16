@@ -697,13 +697,14 @@ export class AppHome extends LitElement {
 
     this.fileHandler();
 
-    if (location.search.includes("edit")) {
+    const URLToImage = new URL(location.href).searchParams.get("url");
+    const shortcutInit = new URL(location.href).searchParams.get("edit");
+
+    if (shortcutInit) {
       this.handlingShortcut = true;
     }
-
-    if (location.search.includes("url")) {
+    else if (URLToImage) {
       console.log(location.search);
-      const URLToImage = new URL(location.href).searchParams.get("url");
 
       if (URLToImage) {
         const response = await fetch(URLToImage.split("web+simpleedit://")[1], {
