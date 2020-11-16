@@ -715,10 +715,6 @@ export class AppHome extends LitElement {
       }
     }
 
-    if ("registerProtocolHandler" in navigator) {
-      navigator.registerProtocolHandler("web+simpleedit", "/share/image/?url=%s", "SimpleEdit");
-    }
-
     window.onresize = () => {
       this.resizeCanvas();
 

@@ -137,6 +137,18 @@ export class AppHeader extends LitElement {
     this.handlingSettings = false;
   }
 
+  setHandler() {
+    if ("registerProtocolHandler" in navigator) {
+      try {
+        navigator.registerProtocolHandler("web+simpleedit", "/share/image/?url=%s", "SimpleEdit");
+        this.handlingSettings = false;
+      }
+      catch (err) {
+        console.error(err);
+      }
+    }
+  }
+
   render() {
     return html`
       <header>
@@ -165,7 +177,7 @@ export class AppHeader extends LitElement {
       
         <div id="settingsActions">
           <fast-button @click="${() => this.about()}">About</fast-button>
-
+          <fast-button @click="${() => this.setHandler()}">Open SimpleEdit links in the app by default</fast-button>
           <fast-button @click="${() => this.clearStorage()}">Clear Storage</fast-button>
         </div>
       </fast-dialog>
