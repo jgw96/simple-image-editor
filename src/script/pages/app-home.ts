@@ -701,6 +701,24 @@ export class AppHome extends LitElement {
       this.handlingShortcut = true;
     }
 
+    if (location.search.includes("url")) {
+      console.log(location.search);
+      const URLToImage = new URL(location.href).searchParams.get("url");
+
+      if (URLToImage) {
+        const response = await fetch(URLToImage, {
+          method: "GET"
+        });
+        const blob = await response.blob();
+
+        this.handleSharedImage(blob);
+      }
+    }
+
+    if ("registerProtocolHandler" in navigator) {
+      navigator.registerProtocolHandler("web+simpleedit", "/share/image/?url=%s", "SimpleEdit");
+    }
+
     window.onresize = () => {
       this.resizeCanvas();
 

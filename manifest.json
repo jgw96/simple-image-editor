@@ -66,6 +66,12 @@
       ]
     }
   ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+simpleedit",
+      "url": "/share/image/?url=%s"
+    }
+  ],
   "share_target": {
     "action": "/share/image/",
     "method": "POST",
