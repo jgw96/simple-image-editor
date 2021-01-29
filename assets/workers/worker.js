@@ -29,9 +29,6 @@ const obj = {
       this.filter.addFilter(type);
     }
 
-    /*canvas.width = width;
-    canvas.height = height;*/
-
     // offscreenContext.drawImage(canvasImage, 0, 0, width, height);
 
     this.drawImage(canvasImage, width, height);
@@ -45,7 +42,7 @@ const obj = {
   },
 
   drawImage(image, width, height) {
-    orgWidth = width;
+    /*orgWidth = width;
     orgHeight = height;
 
     offscreenContext.clearRect(0, 0, canvas.width, canvas.height);
@@ -81,7 +78,11 @@ const obj = {
       yStart = 0;
     }
 
-    offscreenContext.drawImage(image, xStart, yStart, renderableWidth, renderableHeight);
+    offscreenContext.drawImage(image, xStart, yStart, renderableWidth, renderableHeight);*/
+    canvas.width = image.width;
+    canvas.height = image.height;
+
+    offscreenContext.drawImage(image, 0, 0);
   },
 
   loadImage(imageData, width, height) {

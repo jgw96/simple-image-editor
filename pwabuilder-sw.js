@@ -20,13 +20,15 @@ async function shareTargetHandler({ event }) {
     console.log('file', file);
     client.postMessage({ file, action: 'load-image' });
   }());
-
-  // Do something with the rest of formData as you need
-  // Maybe save it to IndexedDB
 };
 
 workbox.routing.registerRoute(
   ({ url }) => url.href.includes("comlink"),
+  new workbox.strategies.CacheFirst(),
+);
+
+workbox.routing.registerRoute(
+  ({ url }) => url.href.includes("ionicons"),
   new workbox.strategies.CacheFirst(),
 );
 

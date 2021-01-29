@@ -299,7 +299,7 @@ export class AppHome extends LitElement {
 
       #onScreenCanvas {
         background: #181818;
-        width: 70vw;
+        width: 48vw;
       }
 
       #drawingCanvas {
