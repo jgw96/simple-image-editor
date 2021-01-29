@@ -1,7 +1,7 @@
 import { LitElement, css, html, customElement, internalProperty } from 'lit-element';
 
 
-import { fileOpen, fileSave, FileSystemHandle } from 'browser-nativefs';
+import { fileOpen, fileSave, FileSystemHandle } from 'browser-fs-access';
 
 //@ts-ignore
 import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
@@ -299,7 +299,7 @@ export class AppHome extends LitElement {
 
       #onScreenCanvas {
         background: #181818;
-        width: 48vw;
+        height: 80%;
       }
 
       #drawingCanvas {
@@ -359,7 +359,8 @@ export class AppHome extends LitElement {
         }
 
         #onScreenCanvas {
-          margin-left: 12em;
+          margin-left: 16em;
+          height: 60%;
         }
 
         #collapseButton {
@@ -407,8 +408,9 @@ export class AppHome extends LitElement {
       }
 
       @media (max-width: 800px) {
-        canvas {
+        #onScreenCanvas {
           width: 100%;
+          height: auto;
         }
 
         .enablePenButton {
