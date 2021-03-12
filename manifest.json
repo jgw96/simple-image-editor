@@ -97,7 +97,8 @@
       "accept": {
         "image/*": [
           ".png",
-          ".jpg"
+          ".jpg",
+          ".simple"
         ]
       }
     }

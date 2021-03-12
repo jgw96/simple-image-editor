@@ -914,8 +914,8 @@ export class AppHome extends LitElement {
     this.mainCanvas?.toBlob(async (blob) => {
       if (blob) {
         await fileSave(blob, {
-          fileName: 'Untitled.png',
-          extensions: ['.png'],
+          fileName: 'Untitled.simple',
+          extensions: ['.simple'],
         });
       }
     });
