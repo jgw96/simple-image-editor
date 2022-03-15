@@ -21,7 +21,7 @@
     "browser-fs-access": "^0.13.0",
     "idb-keyval": "^3.2.0",
     "lit-element": "^2.4.0",
-    "lodash-es": "^4.17.15",
+    "lodash-es": "^4.17.21",
     "pinch-zoom-element": "^1.1.1",
     "pointer-tracker": "^2.4.0",
     "wasm-imagemagick": "^1.2.8"
